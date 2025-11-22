@@ -8,7 +8,7 @@ on:
             - 'v*.*.*'  # バージョンタグにマッチするパターン
 
 jobs:
-    publish:
+    publish-testpypi:
         runs-on: ubuntu-latest
         permissions:
             id-token: write   # OIDCトークン発行に必要
