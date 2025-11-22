@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "libcore-hng"            # PyPIに登録されるパッケージ名
+version = "2.0.0"               # バージョン番号（PEP 440準拠）
+description = "A core library for scalable Python applications"
+readme = "README.md"            # 説明文としてREADMEを利用
+license = {file = "LICENSE"}    # ライセンスファイル
+authors = [
+    { name="unchainworks", email="unchainworks@gmail.com" }
+]
+dependencies = [
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.urls]
+Homepage = "https://github.com/kaioman/libcore-hng"
+Repository = "https://github.com/kaioman/libcore-hng"
+Issues = "https://github.com/kaioman/libcore-hng/issues"

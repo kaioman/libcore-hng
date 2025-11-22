@@ -1,0 +1,10 @@
+{
+    "logging": {
+        "LOGFILE_NAME": "libcore-hang.log",
+        "LOGFILE_NAME_SUFFIX": 0,
+        "LOGFOLDER_NAME": "log",
+        "LOGFORMAT": "%(levelname)-7s : %(asctime)s : %(message)s",
+        "LOGLEVEL": 20,
+        "LOG_DEPTH": ">"
+    }
+}
