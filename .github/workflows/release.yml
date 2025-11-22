@@ -1,0 +1,21 @@
+name: Publish package to PyPI
+
+on:
+    push:
+        branches:
+            - release   # このブランチからのpushだけを対象にする
+        tags:
+            - 'v*.*.*'  # バージョンタグにマッチするパターン
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write   # OIDCトークン発行に必要
+            contents: read
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: pypa/gh-action-pypi-publish@release/v1
+              with:
+                    repository-url: https://upload.pypi.org/legacy/
