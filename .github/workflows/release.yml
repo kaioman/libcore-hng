@@ -2,8 +2,6 @@ name: Publish package to PyPI
 
 on:
     push:
-        branches:
-            - release   # このブランチからのpushだけを対象にする
         tags:
             - 'v*.*.*'  # バージョンタグにマッチするパターン
 
