@@ -25,6 +25,9 @@ jobs:
     publish-pypi:
         runs-on: ubuntu-latest
         needs: publish-testpypi
+        permissions:
+            id-token: write   # OIDCトークン発行に必要
+            contents: read
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-python@v5
