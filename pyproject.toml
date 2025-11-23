@@ -9,7 +9,7 @@ description = "A core library for scalable Python applications"
 readme = "README.md"            # 説明文としてREADMEを利用
 license = {file = "LICENSE"}    # ライセンスファイル
 authors = [
-    { name="unchainworks", email="unchainworks@gmail.com" }
+    { name="kaioman", email="kajin0318@gmail.com" }
 ]
 dependencies = [
 ]

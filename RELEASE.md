@@ -26,7 +26,8 @@ Addボタンをクリックする
 
 ## リリース手順
 
-以下のコマンドを実行する
+(1)
+tbumpを実行する
 
 ```shell
 $.\env\Scripts\tbump <バージョン番号> --no-push
@@ -36,3 +37,10 @@ $.\env\Scripts\tbump <バージョン番号> --no-push
 コマンドを実行するとpyproject.tomlのversionが自動で書き換えてコミットまで実施する
 --no-pushを指定しない場合はversionの書き換え⇒コミットまで実施しプッシュ待ちの
 状態となる
+
+(2)
+タグをpushする
+
+```shell
+$git push origin v<バージョン番号>
+```
