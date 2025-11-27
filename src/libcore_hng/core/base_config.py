@@ -1,8 +1,8 @@
 import json
 import os
-from libcore_hng.configs.logger import LoggerConfig
 from pathlib import Path
 from pydantic import BaseModel
+from libcore_hng.configs.logger import LoggerConfig
 from libcore_hng.utils.system import find_project_root
 
 class BaseConfig(BaseModel):
@@ -10,6 +10,9 @@ class BaseConfig(BaseModel):
     logging: LoggerConfig = LoggerConfig()
     """ ロガー共通設定 """
 
+    project_root_path: Path = Path(".")
+    """ プロジェクトルートパス """
+    
     @classmethod
     def load_config(cls, caller_file: str, *file_names: str, config_dir: Path | None = None) -> "BaseConfig":
         """
@@ -47,8 +50,12 @@ class BaseConfig(BaseModel):
                 with open(config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     merged.update(data)
-        
+                    
+        # プロジェクトルートパスを設定
+        cls.project_root_path = project_root
+
         # 自クラスインスタンスを共通設定クラスインスタンスとして返す
         return cls(**merged)
 
 cfg: BaseConfig | None = None
+""" 共通設定クラスインスタンス """

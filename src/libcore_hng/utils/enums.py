@@ -1,6 +1,6 @@
 from enum import Enum
 
-class logFileNameSuffix(Enum):
+class LogFileNameSuffix(Enum):
     
     """
     ログファイル名サフィックス
@@ -26,7 +26,28 @@ class logFileNameSuffix(Enum):
     
     @classmethod
     def value_of(cls, target_value):
-        for e in logFileNameSuffix:
+        for e in LogFileNameSuffix:
             if e.value == target_value:
                 return e.name
         raise ValueError('{} is not a valid logFileNameSuffix value.'.format(target_value))
+    
+class PlatFormStruct:
+
+        """
+        プラットフォーム構造体クラス
+        """
+
+        def __init__(self):
+
+            """
+            コンストラクタ
+            """
+
+            self.win = 'Windows'
+            """ Windows """
+
+            self.mac = 'Darwin'
+            """ Mac """
+
+            self.linux = 'Linux'
+            """ Linux """

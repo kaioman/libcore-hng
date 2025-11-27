@@ -1,6 +1,6 @@
 import logging
 from pydantic import BaseModel
-from libcore_hng.utils.enums import logFileNameSuffix
+from libcore_hng.utils.enums import LogFileNameSuffix as log_sfx
 
 class LoggerConfig(BaseModel):
     """
@@ -10,7 +10,7 @@ class LoggerConfig(BaseModel):
     logfile_name: str = "default.log"
     """ ログファイル名 """
     
-    logfile_name_suffix: int = logFileNameSuffix.suffixNone
+    logfile_name_suffix: int = log_sfx.suffixNone
     """ ログファイル名サフィックス """
     
     logfolder_name: str = "./log"
@@ -30,29 +30,29 @@ class LoggerConfig(BaseModel):
     log_method_start_string: str = 'START '
     """ ログメソッドStart文字列 """
 
-    Log_method_end_emoji: str = '🟢'
+    log_method_end_emoji: str = '🟢'
     """ ログメソッドEnd絵文字 """
-    Log_method_end_string: str = 'END   '
+    log_method_end_string: str = 'END   '
     """ ログメソッドEnd文字列 """
 
     log_error_emoji: str = '❌'
     """ ログError絵文字 """
-    Log_error_string: str = 'ERROR '
+    log_error_string: str = 'ERROR '
     """ ログError文字列 """
 
-    Log_error_caption_emoji: str = '🔴'
+    log_error_caption_emoji: str = '🔴'
     """ ログErrorCaption絵文字 """
-    Log_error_caption_string: str = 'Error Occurred'
+    log_error_caption_string: str = 'Error Occurred'
     """ ログErrorCaption文字列 """
 
-    Log_warning_emoji: str = '⚠️'
+    log_warning_emoji: str = '⚠️'
     """ ログWarning絵文字 """
-    Log_warning_string: str = 'WARN  '
+    log_warning_string: str = 'WARN  '
     """ ログWarning文字列 """
 
-    Log_proc_emoji: str = '🔵'
+    log_proc_emoji: str = '🔵'
     """ ログProc絵文字 """
-    Log_proc_string: str = 'PROC  '
+    log_proc_string: str = 'PROC  '
     """ ログProc文字列 """
     
     log_depth: str = "+"
