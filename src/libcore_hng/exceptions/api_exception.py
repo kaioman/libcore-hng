@@ -1,0 +1,21 @@
+from libcore_hng.core.app_base_exception import AppBaseException
+
+class ApiException(AppBaseException):
+    """
+    独自例外クラス(API例外)
+    
+    - API関連の例外階層の基底クラス
+    - AppBaseExceptionを継承し、API固有の例外処理を追加する場合に使用
+    """
+    
+    def __init__(self, exc: Exception = None):
+        """
+        コンストラクタ
+        
+        Parameters
+        ----------
+        exc : Exception, optional
+            捕捉した例外オブジェクト。指定しない場合は None
+            渡された例外の型・値・トレースバックを保持する
+        """
+        super().__init__(exc)

@@ -244,7 +244,7 @@ def end_method(method_name: str, returnVal = None):
 
 def error(method_name, e: Exception):
     """
-    メソッドのエラーログを出力する
+    例外発生時のエラーログを出力する
     
     Parameters
     ----------
@@ -272,6 +272,25 @@ def error(method_name, e: Exception):
     # ログ出力
     return logging.error(errorInfo)
 
+def error(message: str, console_logging: bool = True):
+    """
+    エラーログを出力する
+
+    Parameters
+    ----------
+    message : str
+        出力するメッセージ
+    consoleLogging : bool
+        コンソール出力有無
+    """
+    # メッセージ生成
+    logMessage = get_indent() + f"{ get_error_prefix() } { message }"
+    # コンソール出力
+    if console_logging:
+        console_log(logMessage)
+    # ログ出力
+    return logging.error(logMessage)
+    
 def warning(message: str, console_logging: bool = True):
     """
     警告ログを出力する
