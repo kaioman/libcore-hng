@@ -2,7 +2,7 @@ import os
 import json
 import pandas as pd
 import libcore_hng.utils.system as sys
-import libcore_hng.core.base_config as bcfg
+import libcore_hng.utils.app_core as uwc
 from libcore_hng.core.base_io import BaseImporter, BaseExporter
 
 class ExcelImporter(BaseImporter):
@@ -71,7 +71,7 @@ class ExcelImporter(BaseImporter):
         """
 
         # ExcelファイルのFullPathを取得
-        full_path = os.path.join(bcfg.cfg.project_root_path, filepath)
+        full_path = os.path.join(uwc.ins.config.project_root_path, filepath)
         
         # ブックを開く
         self._open_book(full_path)

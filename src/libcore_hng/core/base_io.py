@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import libcore_hng.core.base_config as bcfg
+import libcore_hng.utils.app_core as uwc
 from abc import ABC, abstractmethod
 from libcore_hng.exceptions.directory_exception import DirectoryNotFoundError
 
@@ -39,7 +39,8 @@ class BaseIO(ABC):
         if os.path.isabs(output_dir):
             return os.path.join(output_dir, filename)
         else:
-            return os.path.join(bcfg.cfg.project_root_path, output_dir, filename)
+            return os.path.join(uwc.ins.config.project_root_path, output_dir, filename)
+        
 class BaseImporter(BaseIO):
     """
     インポート基底クラス
