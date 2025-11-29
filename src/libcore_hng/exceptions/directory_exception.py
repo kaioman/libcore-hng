@@ -1,10 +1,10 @@
 from libcore_hng.core.base_app_exception import AppBaseException
 
-class OutputDirectoryNotFoundError(AppBaseException):
+class DirectoryNotFoundError(AppBaseException):
     """
-    独自例外クラス(出力先ディレクトリ例外)
+    独自例外クラス(ディレクトリ例外)
     
-    - ファイル保存処理などで指定された出力先ディレクトリが存在しない場合に発生する
+    - ファイル保存処理などで指定されたディレクトリが存在しない場合に発生する
     """
 
     def __init__(self, directory: str):
@@ -16,4 +16,4 @@ class OutputDirectoryNotFoundError(AppBaseException):
         """
 
         self.directory = directory
-        super().__init__(f"出力先ディレクトリが存在しません: {directory}")
+        super().__init__(f"ディレクトリが存在しません: {directory}")

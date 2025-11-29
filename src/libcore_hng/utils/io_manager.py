@@ -1,8 +1,9 @@
 import os
+import json
 import pandas as pd
+import libcore_hng.utils.system as sys
 import libcore_hng.core.base_config as bcfg
 from libcore_hng.core.base_io import BaseImporter, BaseExporter
-from libcore_hng.exceptions.directory_exception import OutputDirectoryNotFoundError
 
 class ExcelImporter(BaseImporter):
     """
@@ -46,7 +47,7 @@ class ExcelImporter(BaseImporter):
         # シートの読み込み
         self.sheets = self.workbooks.sheet_names
         
-    def load(self, filepath: str, sheet_name: str = None, header_row_index: int | list[int] | None = 0) -> pd.DataFrame:
+    def to_dataframe(self, filepath: str, sheet_name: str = None, header_row_index: int | list[int] | None = 0) -> pd.DataFrame:
         """
         ExcelシートをDataFrameとして読み込む
         
@@ -81,39 +82,112 @@ class ExcelImporter(BaseImporter):
         
         # 指定がない場合は最初のシートを読み込む
         return pd.read_excel(full_path, sheet_name=sheet_name, header=header_row_index)
+
+class JsonImporter(BaseImporter):
+    """
+    Jsonファイルインポートクラス
+    """
+
+    def to_dataframe(self, filepath: str) -> pd.DataFrame:
+        """
+        JSONファイルを読み込み、DataFrameに変換する
+        
+        Parameters
+        ----------
+        filepath : str
+            ファイルパス
+
+        Returns
+        -------
+        pd.DataFrame
+            JSONデータをDataFrameに変換したオブジェクト
+        """
+
+        # ファイルパスから出力先ディレクトリ、ファイル名を分割
+        output_dir, filename = sys.split_path(filepath)
+        
+        # 入力ディレクトリ存在確認
+        self.exists_directory(output_dir)
+
+        # 拡張子を補完する
+        filename = sys.ensure_extenstion(filename, 'json')
+        
+        # jsonファイルのFullPathを取得
+        full_path = self.get_fullpath(output_dir, filename)
+        
+        # jsonファイルをdict型で取得する
+        dict_json = self.to_dict(full_path)
+        
+        # dictをdataframeに変換する(キーをカラム名とする)
+        return pd.DataFrame(dict_json)
+        
+    def to_dict(self, filepath: str) -> dict:
+        """
+        JSONファイルを読み込み、dictに変換する
+        
+        Parameters
+        ----------
+        filepath : str
+            ファイルパス
+
+        Returns
+        -------
+        dict
+            JSONデータをdict型に変換したオブジェクト
+        """
+        
+        # jsonファイルを開く
+        with self.get_json_file(filepath) as file_json:
+        
+            # jsonファイルをロードする
+            return json.load(file_json)
+
+    def get_json_file(self, filepath: str):
+        """
+        JSONファイルを開いてファイルオブジェクトを返す
+        
+        Parameters
+        ----------
+        filepath : str
+            ファイルパス
+
+        Returns
+        -------
+        TextIOWrapper
+            開いたJSONファイルのファイルオブジェクト
+        """
+
+        # jsonファイルを開く
+        return open(filepath, 'r', encoding='utf-8')
     
 class JsonExporter(BaseExporter):
     """
     JSONエクスポートクラス
     """
     
-    def save(self, output_dir: str, filename: str, target_df: pd.DataFrame):
+    def save(self, filepath: str, target_df: pd.DataFrame):
         """
         DataFrameをjsonファイルとして保存する
         
         Parameters
         ----------
-        output_dir : str
-            出力先ディレクトリパス
-        filename : str
-            保存するJsonファイル名
+        filepath : str
+            ファイルパス
         target_df : pd.DataFrame
             保存するDataFrameオブジェクト
         """
+
+        # ファイルパスから出力先ディレクトリ、ファイル名を分割
+        output_dir, filename = sys.split_path(filepath)
         
         # 出力先ディレクトリ存在確認
-        if not os.path.isdir(output_dir):
-            raise OutputDirectoryNotFoundError(output_dir)
+        self.exists_directory(output_dir)
         
         # 拡張子を補完する
-        if not filename.lower().endswith('.json'):
-            filename += '.json'
+        filename = sys.ensure_extenstion(filename, 'json')
         
         # 出力ファイルのFullPathを取得
-        if os.path.isabs(output_dir):
-            full_path = os.path.join(output_dir, filename)
-        else:
-            full_path = os.path.join(bcfg.cfg.project_root_path, output_dir, filename)
+        full_path = self.get_fullpath(output_dir, filename)
 
         # jsonファイル出力
         target_df.to_json(full_path, orient='records', force_ascii=False, indent=4, date_format='iso')
