@@ -9,7 +9,6 @@ class Test(BaseModel, LoggingMixin):
 
     def log_test(self):
         app_logger.info("Logging from Test class")
-        #print("Logging from Test class")
         self.log_test2()
         
     def log_test2(self):

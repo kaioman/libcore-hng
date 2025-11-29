@@ -1,4 +1,4 @@
-from libcore_hng.core.app_base_exception import AppBaseException
+from libcore_hng.core.base_app_exception import AppBaseException
 
 class FileSystemException(AppBaseException):
     """

@@ -40,13 +40,12 @@ def get_platform():
     pf = platform.system()
 
     # 戻り値を返す
-    pfs = enums.PlatFormStruct()
     if pf == 'Windows':
-        return pfs.win
+        return enums.PlatForm.WINDOWS
     elif pf == 'Darwin':
-        return pfs.mac
+        return enums.PlatForm.MAC
     elif pf == 'Linux':
-        return pfs.linux
+        return enums.PlatForm.LINUX
 
 def get_now(fmt:str=''):
 

@@ -50,12 +50,13 @@ class BaseConfig(BaseModel):
                 with open(config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     merged.update(data)
-                    
+        instance = cls(**merged)
+        
         # プロジェクトルートパスを設定
-        cls.project_root_path = project_root
-
+        instance.project_root_path = project_root
+        
         # 自クラスインスタンスを共通設定クラスインスタンスとして返す
-        return cls(**merged)
+        return instance
 
 cfg: BaseConfig | None = None
 """ 共通設定クラスインスタンス """

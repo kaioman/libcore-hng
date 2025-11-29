@@ -26,12 +26,25 @@ class AppBaseException(Exception):
         super().__init__(str(exc) if exc else "")
         
         # 例外情報取得
-        self._exc_type = type(exc) if exc else None
-        self._exc_value = exc
-        self._exc_traceback = (
-            ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-            if exc else None
-        )
+        if isinstance(exc, BaseException):
+            # Exceptionオブジェクトをラップする
+            self._exc_type = type(exc) if exc else None
+            self._exc_value = exc
+            self._exc_traceback = (
+                ''.join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+                if exc else None
+            )
+        elif isinstance(exc, str):
+            # メッセージ文字列のみ保持する
+            self._exc_type = None
+            self._exc_value = exc
+            self._exc_traceback = None
+        else:
+            # 例外なしの場合
+            self._exc_type = None
+            self._exc_value = None
+            self._exc_traceback = None
+            
         self._exc_uuid = str(uuid.uuid4())
 
         # ログ出力
@@ -93,5 +106,7 @@ class AppBaseException(Exception):
         if self._exc_type:
             app_logger.error(f"Exception [{self._exc_uuid}]: {self._exc_type.__name__}: {self._exc_value}")
             app_logger.error(f"Traceback:\n{self._exc_traceback}")
+        elif self._exc_value:
+            app_logger.error(f"Exception [{self._exc_uuid}]: Message: {self._exc_value}")
         else:
             app_logger.error(f"Exception [{self._exc_uuid}]: No exception captured.")
