@@ -1,6 +1,0 @@
-{
-    "test": {
-        "ADD_MEMBER": "add Member override",
-        "LIST_MEMBER": ["A", "B", "C", "D"]
-    }
-}
