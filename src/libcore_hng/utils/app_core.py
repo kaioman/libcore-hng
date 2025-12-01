@@ -32,7 +32,6 @@ class AppInitializer:
             config_file = ("logger.json")
         
         # 共通設定クラスインスタンス生成
-        #bcfg.cfg = bcfg.BaseConfig.load_config(base_file, *config_file)
         self.config = bcfg.BaseConfig.load_config(base_file, *config_file)
 
         # ロガー設定

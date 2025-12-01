@@ -2,7 +2,7 @@ from libcore_hng.core.base_app_exception import AppBaseException
 
 class FileSystemException(AppBaseException):
     """
-    独自例外クラス(ファイルシステム例外)
+    ファイルシステム例外クラス
     
     - ファイルシステム関連の例外階層の基底クラス
     - AppBaseExceptionを継承し、ファイルシステム固有の例外処理を追加する場合に使用

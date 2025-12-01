@@ -2,7 +2,7 @@ from libcore_hng.core.base_app_exception import AppBaseException
 
 class ApiException(AppBaseException):
     """
-    独自例外クラス(API例外)
+    API例外クラス
     
     - API関連の例外階層の基底クラス
     - AppBaseExceptionを継承し、API固有の例外処理を追加する場合に使用

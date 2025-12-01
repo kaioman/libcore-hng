@@ -2,7 +2,7 @@ from libcore_hng.core.base_app_exception import AppBaseException
 
 class DirectoryNotFoundError(AppBaseException):
     """
-    独自例外クラス(ディレクトリ例外)
+    ディレクトリ例外クラス
     
     - ファイル保存処理などで指定されたディレクトリが存在しない場合に発生する
     """
