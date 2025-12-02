@@ -4,7 +4,7 @@ testPyPI、PyPIへパッケージをアップロードする
 
 ## 準備
 
-testPyPI、PyPIへそれぞれログインし、Trusted Publisherを追加する
+### testPyPI、PyPIへそれぞれログインし、Trusted Publisherを追加する
 
 (1)
 左側にある「あなたのアカウント」内のPublishingをクリックする
@@ -24,6 +24,15 @@ Environment name：省略可
 (4)
 Addボタンをクリックする
 
+### ホストにtbumpをインストールする
+
+(1)
+以下のコマンドを実行する
+
+```shell
+$pip install tbump
+```
+
 ## リリース手順
 
 ■pushまで自動で実施する手順
@@ -32,7 +41,7 @@ Addボタンをクリックする
 tbumpを実行する
 
 ```shell
-$.\env\Scripts\tbump <バージョン番号>
+$tbump <バージョン番号>
 ```
 
 ■pushせずにローカルリポジトリまでの変更に留め、タグを手動でpushする手順
@@ -41,7 +50,7 @@ $.\env\Scripts\tbump <バージョン番号>
 tbumpを実行する
 
 ```shell
-$.\env\Scripts\tbump <バージョン番号> --no-push
+$tbump <バージョン番号> --no-push
 ```
 
 バージョン番号例：2.0.3
