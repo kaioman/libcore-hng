@@ -1,8 +1,8 @@
 import logging
-from pydantic import BaseModel
+from libcore_hng.core.base_config_model import BaseConfigModel
 from libcore_hng.utils.enums import LogFileNameSuffix as log_sfx
 
-class LoggerConfig(BaseModel):
+class LoggerConfig(BaseConfigModel):
     """
     ロガー共通設定クラス
     """

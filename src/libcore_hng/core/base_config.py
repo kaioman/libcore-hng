@@ -1,11 +1,11 @@
 import json
 import os
 from pathlib import Path
-from pydantic import BaseModel
+from libcore_hng.core.base_config_model import BaseConfigModel
 from libcore_hng.configs.logger import LoggerConfig
 from libcore_hng.utils.system import find_project_root
 
-class BaseConfig(BaseModel):
+class BaseConfig(BaseConfigModel):
     
     logging: LoggerConfig = LoggerConfig()
     """ ロガー共通設定 """
