@@ -1,9 +1,12 @@
 import json
 import os
 from pathlib import Path
+from typing import TypeVar
 from libcore_hng.core.base_config_model import BaseConfigModel
 from libcore_hng.configs.logger import LoggerConfig
 from libcore_hng.utils.system import find_project_root
+
+T = TypeVar("T", bound="BaseConfig")
 
 class BaseConfig(BaseConfigModel):
     
@@ -14,7 +17,7 @@ class BaseConfig(BaseConfigModel):
     """ プロジェクトルートパス """
     
     @classmethod
-    def load_config(cls, caller_file: str, *file_names: str, config_dir: Path | None = None) -> "BaseConfig":
+    def load_config(cls: type[T], caller_file: str, *file_names: str, config_dir: Path | None = None) -> T:
         """
         設定ファイルを読み込む
         

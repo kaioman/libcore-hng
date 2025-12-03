@@ -1,7 +1,10 @@
 import libcore_hng.core.base_config as bcfg
 import libcore_hng.utils.app_logger as app_logger
+from typing import TypeVar, Generic
 
-class AppInitializer:
+T = TypeVar("T", bound=bcfg.BaseConfig)
+
+class AppInitializer(Generic[T]):
     """
     アプリケーションコアクラス
 
@@ -9,12 +12,15 @@ class AppInitializer:
     - ロガー設定
     """
 
-    def __init__(self, base_file: str = __file__, *config_file: str):
+    def __init__(self, config_cls: type[T], base_file: str = __file__, *config_file: str):
         """
         コンストラクタ
 
         Parameters
         ----------
+        config_cls : type[T]
+            設定クラス。BaseConfig を継承したクラスを指定し、
+            アプリケーション固有の設定ロードや初期化処理に利用する        
         base_file : str, optional
             基準となるファイルパス (デフォルト: __file__)
         *config_file : str, optional
@@ -32,15 +38,15 @@ class AppInitializer:
             config_file = ("logger.json")
         
         # 共通設定クラスインスタンス生成
-        self.config = bcfg.BaseConfig.load_config(base_file, *config_file)
+        self.config: T = config_cls.load_config(base_file, *config_file)
 
         # ロガー設定
         app_logger.setting(self.config)
         
-# グローバルインスタンス
-ins: AppInitializer | None = None
+core: AppInitializer[T] | None = None
+""" アプリケーション初期化済みインスタンスを保持するグローバル変数 """
 
-def init_app(base_file: str = __file__, *config_file: str) -> AppInitializer:
+def init_app(config_cls: type[T], base_file: str = __file__, *config_file: str) -> AppInitializer[T]:
     """
     アプリケーションの初期化処理を一度だけ実行する関数
 
@@ -50,6 +56,9 @@ def init_app(base_file: str = __file__, *config_file: str) -> AppInitializer:
 
     Parameters
     ----------
+    config_cls : type[T]
+        設定クラス。BaseConfig を継承したクラスを指定し、
+        アプリケーション固有の設定ロードや初期化処理に利用する
     base_file : str, optional
         基準となるファイルパス (デフォルト: __file__)
     *config_file : str, optional
@@ -63,6 +72,6 @@ def init_app(base_file: str = __file__, *config_file: str) -> AppInitializer:
         グローバル変数 app_core にも格納されるため、他モジュールから参照可能。
     """
 
-    global ins
-    ins = AppInitializer(base_file, *config_file)
-    return ins
+    global core
+    core = AppInitializer(config_cls, base_file, *config_file)
+    return core
