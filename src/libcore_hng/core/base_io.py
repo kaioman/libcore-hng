@@ -39,7 +39,7 @@ class BaseIO(ABC):
         if os.path.isabs(output_dir):
             return os.path.join(output_dir, filename)
         else:
-            return os.path.join(uwc.ins.config.project_root_path, output_dir, filename)
+            return os.path.join(uwc.core.config.project_root_path, output_dir, filename)
         
 class BaseImporter(BaseIO):
     """

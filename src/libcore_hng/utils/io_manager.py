@@ -71,7 +71,7 @@ class ExcelImporter(BaseImporter):
         """
 
         # ExcelファイルのFullPathを取得
-        full_path = os.path.join(uwc.ins.config.project_root_path, filepath)
+        full_path = os.path.join(uwc.core.config.project_root_path, filepath)
         
         # ブックを開く
         self._open_book(full_path)
