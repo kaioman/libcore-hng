@@ -1,9 +1,10 @@
-import libcore_hng.utils.app_core as uwc
+import libcore_hng.utils.app_core as app
 from libcore_hng.utils.imageops import ImageOps, FontNotSetError
 from libcore_hng.exceptions.file_exception import FontFileNotFoundError, ImageFileNotFoundError
+from libcore_hng.core.base_config import BaseConfig
 
 # アプリ初期化
-uwc.init_app(__file__, "logger.json")
+app.init_app(BaseConfig, __file__, "logger.json")
 
 try:
     # イメージクラスインスタンス
