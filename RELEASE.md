@@ -57,7 +57,7 @@ jobs:
             - uses: actions/checkout@v4
             - uses: actions/setup-python@v5
               with:
-                    python-version: '3.10.11'
+                    python-version: '3.11.9'
             - run: pip install build
             - run: python -m build
             - uses: pypa/gh-action-pypi-publish@release/v1
@@ -73,7 +73,7 @@ jobs:
             - uses: actions/checkout@v4
             - uses: actions/setup-python@v5
               with:
-                python-version: '3.10.11'
+                python-version: '3.11.9'
             - run: pip install build
             - run: python -m build
             - uses: pypa/gh-action-pypi-publish@release/v1
