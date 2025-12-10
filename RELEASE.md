@@ -24,6 +24,69 @@ Environment name：省略可
 (4)
 Addボタンをクリックする
 
+### GitHubリポジトリにworkflowを作成する
+
+(1)
+GitHubにログインしてリポジトリを開き、ブランチをmainに変更する
+
+(2)
+Actionsをクリックする
+
+(3)
+Choose a workflowでPublish Python PackageのConfigureボタンをクリックする
+
+(4)
+workflowのファイル名を「release.yml」に変更し、以下の内容をEdit部に張り付ける
+
+```yml
+name: Publish package to PyPI
+
+on:
+    push:
+        tags:
+            - 'v*.*.*'  # バージョンタグにマッチするパターン
+
+jobs:
+    publish-testpypi:
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write   # OIDCトークン発行に必要
+            contents: read
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v5
+              with:
+                    python-version: '3.10.11'
+            - run: pip install build
+            - run: python -m build
+            - uses: pypa/gh-action-pypi-publish@release/v1
+              with:
+                    repository-url: https://test.pypi.org/legacy/
+    publish-pypi:
+        runs-on: ubuntu-latest
+        needs: publish-testpypi
+        permissions:
+            id-token: write   # OIDCトークン発行に必要
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v5
+              with:
+                python-version: '3.10.11'
+            - run: pip install build
+            - run: python -m build
+            - uses: pypa/gh-action-pypi-publish@release/v1
+              with:
+                repository-url: https://upload.pypi.org/legacy/
+```
+
+(5)
+右上の「Commit changes」ボタンをクリックする
+
+(6)
+Commit messageは自動で挿入されるので、「Commit changes」ボタンをクリックする（release.ymlがmainブランチにプッシュされる）
+
 ### ホストにtbumpをインストールする
 
 (1)
