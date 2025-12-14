@@ -12,6 +12,10 @@ authors = [
     { name="kaioman", email="kajin0318@gmail.com" }
 ]
 dependencies = [
+    "pydantic",
+    "psutil",
+    "pandas",
+    "openpyxl"
 ]
 
 [tool.setuptools]
