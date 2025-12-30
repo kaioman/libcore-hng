@@ -89,7 +89,7 @@ def setting(base_cfg: BaseConfig):
 
     # ログ出力先がない場合、作成する
     if os.path.exists(base_cfg.project_root_path / base_cfg.logging.logfolder_name) == False:
-        os.mkdir(base_cfg.logging.logfolder_name)
+        os.mkdir(base_cfg.logging.logfolder_name, )
 
     # ログファイル名サフィックス設定
     logFileName = getLogFileName(base_cfg.logging)
