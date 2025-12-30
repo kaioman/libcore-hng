@@ -35,15 +35,16 @@ class BaseConfig(BaseConfigModel):
         
         if config_dir is None:
             # 環境変数CONFIG_DIRの設定有無を確認
-            if "CONFIG_DIR" in os.environ:
+            if "PROJECT_ROOT" in os.environ:
                 # 環境変数より設定ファイル格納パスを取得
-                config_dir = Path(os.environ["CONFIG_DIR"]).resolve()
+                project_root = Path(os.environ["PROJECT_ROOT"]).resolve()
+                
             else:
                 # プロジェクトルートパスを取得
                 project_root = find_project_root(Path(caller_file))
 
-                # 設定ファイル格納パスを取得
-                config_dir = project_root / "configs"
+        # 設定ファイル格納パスを取得
+        config_dir = project_root / "configs"
 
         # 設定ファイルを読み込んでマージする
         merged = {}
