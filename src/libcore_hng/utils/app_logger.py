@@ -2,6 +2,8 @@ import os
 import logging
 import functools
 import libcore_hng.utils.helpers as helper
+from logging.handlers import TimedRotatingFileHandler
+from datetime import datetime
 from libcore_hng.core.base_config import BaseConfig
 from libcore_hng.configs.logger import LoggerConfig
 from libcore_hng.utils.enums import LogFileNameSuffix as log_sfx
@@ -83,7 +85,7 @@ def setting(base_cfg: BaseConfig):
 
     Parameters
     ----------
-    log_cfg : BaseConfig
+    base_cfg : BaseConfig
         共通設定クラス
     """
 
@@ -95,11 +97,28 @@ def setting(base_cfg: BaseConfig):
     logFileName = getLogFileName(base_cfg.logging)
     
     # ロガー設定
-    logging.basicConfig(
+    logger = logging.getLogger()
+    logger.setLevel(base_cfg.logging.loglevel)
+    
+    # 既存のハンドラをクリア
+    if logger.hasHandlers():
+        logger.handlers.clear()
+    
+    # 日付でローテーションするハンドラを追加
+    handler = CustomTimedRotatingFileHandler(
         filename=os.path.join(base_cfg.logging.logfolder_name, logFileName),
-        level=base_cfg.logging.loglevel, 
-        format=base_cfg.logging.logformat)
-
+        when=base_cfg.logging.log_rotation_when,
+        interval=base_cfg.logging.log_interval,
+        backupCount=base_cfg.logging.log_backupCount,
+        encoding=base_cfg.logging.log_file_encording,
+        utc=base_cfg.logging.log_rotation_utc_time
+    )
+    
+    # ログフォーマット設定
+    formatter = logging.Formatter(base_cfg.logging.logformat)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    
     # 共通設定をグローバル変数に保存
     global logger_config
     logger_config = base_cfg.logging
@@ -328,3 +347,9 @@ def info(message: str, console_logging: bool = True):
         console_log(logMessage)
     # ログ出力
     return logging.info(logMessage)
+
+class CustomTimedRotatingFileHandler(TimedRotatingFileHandler):
+    def rotation_filename(self, default_name):
+        base, ext = os.path.splitext(self.baseFilename)
+        d = datetime.now().strftime("%Y-%m-%d")
+        return f"{base}.{d}{ext}"
