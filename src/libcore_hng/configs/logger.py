@@ -57,3 +57,27 @@ class LoggerConfig(BaseConfigModel):
     
     log_depth: str = "+"
     """ インデント文字列 """
+    
+    log_interval: int = 1
+    """ ログインターバル """
+    
+    log_backupCount: int = 7
+    """ ログバックアップ数 """
+    
+    log_rotation_when: str = "midnight"
+    """ 
+    ローテーションタイミング
+    
+    - S:秒ごと
+    - M:分ごと
+    - H:時ごと
+    - D:日ごと(0時)
+    - midnight:日ごと(0時) Dと同じ意味
+    - W0～W6:曜日ごと(0=月曜～6=日曜)
+    """
+    
+    log_file_encording: str = "utf-8"
+    """ ログファイルエンコード """
+    
+    log_rotation_utc_time: bool = False
+    """ ローテーションをutc時間で実施する """
