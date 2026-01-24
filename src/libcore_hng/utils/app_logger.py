@@ -89,10 +89,10 @@ def setting(base_cfg: BaseConfig):
         共通設定クラス
     """
 
-    # ログ出力先がない場合、作成する
-    if os.path.exists(base_cfg.project_root_path / base_cfg.logging.logfolder_name) == False:
-        os.mkdir(base_cfg.logging.logfolder_name, )
-
+    # ログ出力先を作成する(存在する場合はスキップ)
+    log_file_path = base_cfg.project_root_path / base_cfg.logging.logfolder_name
+    log_file_path.mkdir(parents=True, exist_ok=True)
+    
     # ログファイル名サフィックス設定
     logFileName = getLogFileName(base_cfg.logging)
     

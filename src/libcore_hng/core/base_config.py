@@ -45,10 +45,8 @@ class BaseConfig(BaseConfigModel):
                 # 環境変数よりプロジェクトルートパスを取得
                 project_root = Path(os.environ["PROJECT_ROOT"]).resolve()
             elif "CONFIG_DIR" in os.environ:
-                # 環境変数より設定ファイル格納ディレクトリパスを取得
-                config_dir_env = Path(os.environ["CONFIG_DIR"]).resolve()
-                # プロジェクトルートパスを取得
-                project_root = config_dir_env.parent
+                # 環境変数より設定ファイル格納ディレクトリパスを取得(プロジェクトルートと兼用とする。CONFIG_DIRは将来廃止予定)
+                project_root = Path(os.environ["CONFIG_DIR"]).resolve()
             else:
                 # プロジェクトルートパスを取得
                 project_root = find_project_root(Path(caller_file))
