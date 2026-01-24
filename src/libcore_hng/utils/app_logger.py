@@ -106,7 +106,7 @@ def setting(base_cfg: BaseConfig):
     
     # 日付でローテーションするハンドラを追加
     handler = CustomTimedRotatingFileHandler(
-        filename=os.path.join(base_cfg.logging.logfolder_name, logFileName),
+        filename=log_file_path / logFileName,
         when=base_cfg.logging.log_rotation_when,
         interval=base_cfg.logging.log_interval,
         backupCount=base_cfg.logging.log_backupCount,
