@@ -1,0 +1,20 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches-ignore:
+      - release
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: development
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load secrets
+        run: echo "DAMMY_SECRETS_DEV=${{ secrets.DAMMY_SECRETS_DEV }}" >> $GITHUB_ENV
+
+      - name: Run Python
+        run: python deploy.py
