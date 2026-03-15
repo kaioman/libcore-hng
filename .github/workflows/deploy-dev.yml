@@ -15,9 +15,11 @@ jobs:
 
       - name: Load secrets
         run: |
-          echo "DAMMY_SECRETS_DEV<<EOF" >> $GITHUB_ENV
-          echo "${{ secrets.DAMMY_SECRETS_DEV }}" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          {
+            echo DAMMY_SECRETS_DEV<<EOF
+            echo ${{ secrets.DAMMY_SECRETS_DEV }}
+            echo EOF
+          } >> "$GITHUB_ENV"
 
       - name: Run Python
         run: python deploy.py
