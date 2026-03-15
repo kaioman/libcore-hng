@@ -14,7 +14,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Load secrets
-        run: echo "DAMMY_SECRETS_DEV=${{ secrets.DAMMY_SECRETS_DEV }}" >> $GITHUB_ENV
+        run: |
+          echo "DAMMY_SECRETS_DEV<<EOF" >> $GITHUB_ENV
+          echo "${{ secrets.DAMMY_SECRETS_DEV }}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Run Python
         run: python deploy.py
