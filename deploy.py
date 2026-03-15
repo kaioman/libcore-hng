@@ -1,6 +1,6 @@
 import os
 import json
 
-config = json.loads(os.environ["DAMMY_SECRETS_DEV"])
+#config = json.loads(os.environ["DAMMY_SECRETS_DEV"])
 
-print(config)
+print(os.environ["DAMMY_SECRETS_DEV"])
