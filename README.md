@@ -101,3 +101,68 @@ def test013():
     print(app.ins.config.test.append_member)
 
 ```
+
+---
+
+### 設定ファイルの暗号化と復号鍵の管理
+
+機密情報を含む設定ファイルを保護するため、ファイルを暗号化し、その復号鍵を Google Cloud Secret Manager に安全に保存して管理します。開発環境と本番環境で同じ仕組みを使用することで、セキュアで統一された運用が可能です。
+
+#### 手順
+
+1. **設定ファイルの暗号化**: `libcore_hng.utils.crypto.create_encryption_file` を使用して、既存のJSONファイルを暗号化します。これにより、元のファイル名に `.enc` が付いた暗号化ファイルが生成され、標準出力に復号鍵が表示されます。
+2. **復号鍵の登録**: コンソールに表示された鍵をコピーし、GCP Secret Manager に登録します（例: `my-app-secret-dev`, `my-app-secret-prod`）。
+
+#### 実装例 (`tests/test_016_enc_file.py`)
+
+```python
+import libcore_hng.utils.app_core as app
+import libcore_hng.utils.crypto as crypto
+from libcore_hng.core.base_config import BaseConfig
+
+# アプリ初期化
+app.init_app(BaseConfig, __file__, "logger.json")
+
+# 設定ファイルを暗号化して新規ファイル (.enc) として作成
+# 戻り値として復号鍵が得られます
+key = crypto.create_encryption_file("configs/test-config.json")
+
+# 生成された鍵を表示
+print("以下の鍵を GCP Secret Manager に登録してください:")
+print(key.decode("utf-8"))
+```
+
+`BaseConfig.load_config` は拡張子が `.enc` のファイルを自動的に検知し、暗号化ファイルとして復号・ロードする機能を備えています。
+
+復号に必要なGCP設定は、以下の環境変数から自動的に取得されます。
+
+- `GCP_PROJECT_ID`: GCPのプロジェクトID
+- `GCP_SECRET_NAME`: GCP Secret Manager に登録したシークレットのベース名
+- `APP_ENV`: 環境名（例: `dev`, `prod`）。シークレット名のサフィックスとして使用されます（デフォルト: `dev`）
+
+※ 例: `GCP_SECRET_NAME=my-app-secret`, `APP_ENV=prod` の場合、GCPから `my-app-secret-prod` のシークレットを取得します。
+
+---
+
+### 環境変数設定例（Docker/ローカル開発）
+
+環境変数を使用して、GCP Secret Manager へのアクセス情報や、CI/CD・ローカル用の一時的な復号鍵を直接渡すことができます。
+
+`docker-compose.yml` での設定例を以下に示します。
+
+```yaml
+services:
+  app:
+    image: your-app-image
+    environment:
+      # GCP Secret Manager を利用する場合
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_SECRET_NAME=${GCP_SECRET_NAME}
+      - APP_ENV=prod  # 開発時は dev などを指定
+      
+      # --- または ---
+      # 復号鍵を直接指定する場合 (GCP設定より優先されます)
+      - APP_SECRET_KEY=${APP_SECRET_KEY}
+```
+
+※ 開発時やデプロイ時には、Docker Composeが読み込む `.env` ファイルなどにこれらの変数を記述しておくことで、安全に鍵情報や設定をコンテナへ渡すことができます。

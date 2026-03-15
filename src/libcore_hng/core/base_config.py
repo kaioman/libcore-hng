@@ -61,10 +61,24 @@ class BaseConfig(BaseConfigModel):
         merged = {}
         for file_name in file_names:
             config_path = config_dir / file_name
-            if config_path.exists():
+            if not config_path.exists():
+                continue
+
+            if file_name.endswith(".enc"):
+                # --- 暗号化ファイル (.enc) の場合 ---
+                # 循環参照を避けるため関数内でインポート
+                from libcore_hng.utils.secret_manager import load_secret
+                
+                # ファイルを復号化
+                raw_bytes = load_secret(config_path)
+                data = json.loads(raw_bytes.decode('utf-8'))
+                merged.update(data)
+            else:
+                # --- 通常のJSONファイルの場合 ---
                 with open(config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     merged.update(data)
+                    
         instance = cls(**merged)
         
         # プロジェクトルートパスを設定
