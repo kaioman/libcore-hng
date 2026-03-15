@@ -14,9 +14,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Load secrets
+        id: step_one
         run: |
           {
-            echo DAMMY_SECRETS_DEV<<EOF
+            echo 'DAMMY_SECRETS_DEV<<EOF'
             echo ${{ secrets.DAMMY_SECRETS_DEV }}
             echo EOF
           } >> "$GITHUB_ENV"
