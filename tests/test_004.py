@@ -10,7 +10,7 @@ def some_proccess():
         raise ConfigurationException(e)
 
 # アプリ初期化
-app.init_app(BaseConfig, __file__, "logger.json")
+app.init_app(BaseConfig, __file__, "app_config.json")
 
 try:
     some_proccess()

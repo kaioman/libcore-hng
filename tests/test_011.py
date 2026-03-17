@@ -4,7 +4,7 @@ from libcore_hng.exceptions.directory_exception import DirectoryNotFoundError
 from libcore_hng.core.base_config import BaseConfig
 
 # アプリ初期化
-app.init_app(BaseConfig, __file__, "logger.json")
+app.init_app(BaseConfig, __file__, "app_config.json")
 
 # ソースファイルimport
 importer = ExcelImporter()

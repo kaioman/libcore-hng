@@ -5,8 +5,8 @@ import test_002_sub
 def test_load_config():
     test_002_config.cfg = test_002_config.DerivedConfig.load_config(
         __file__,
-        "logger.json",
-        "override.json"
+        "app_config.json",
+        "app_config_override.json"
     )
 
 # 設定読込
