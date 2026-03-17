@@ -103,10 +103,11 @@ class AppBaseException(Exception):
 
         - UUID, 型名, 値, トレースバックをログに記録
         """
-        if self._exc_type:
-            app_logger.error(f"Exception [{self._exc_uuid}]: {self._exc_type.__name__}: {self._exc_value}")
-            app_logger.error(f"Traceback:\n{self._exc_traceback}")
-        elif self._exc_value:
-            app_logger.error(f"Exception [{self._exc_uuid}]: Message: {self._exc_value}")
-        else:
-            app_logger.error(f"Exception [{self._exc_uuid}]: No exception captured.")
+        if app_logger.logger_config:
+            if self._exc_type:
+                app_logger.error(f"Exception [{self._exc_uuid}]: {self._exc_type.__name__}: {self._exc_value}")
+                app_logger.error(f"Traceback:\n{self._exc_traceback}")
+            elif self._exc_value:
+                app_logger.error(f"Exception [{self._exc_uuid}]: Message: {self._exc_value}")
+            else:
+                app_logger.error(f"Exception [{self._exc_uuid}]: No exception captured.")
