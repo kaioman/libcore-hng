@@ -108,9 +108,8 @@ class BaseConfig(BaseConfigModel):
                     f"読み込まれた設定ファイル: `{files_str}`\n"
                     f"app_config.json の内容（サンプル）:\n{app_config_content}"
                 )
-                print(error_message)
+                print(f"設定ファイル \'{file_name}\' の読み込みに失敗しました。詳細: {error_message}")
                 raise ConfigurationException(error_message)
-
             if file_name.endswith(".enc"):
                 # --- 暗号化ファイル (.enc) の場合 ---
                 # 循環参照を避けるため関数内でインポート
