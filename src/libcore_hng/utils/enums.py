@@ -27,8 +27,8 @@ class LogFileNameSuffix(Enum):
     def value_of(cls, target_value):
         for e in LogFileNameSuffix:
             if e.value == target_value:
-                return e.name
-        raise ValueError('{} is not a valid logFileNameSuffix value.'.format(target_value))
+                return e
+        raise ValueError("{} is not a valid logFileNameSuffix value.".format(target_value))
     
 class PlatForm(Enum):
     """

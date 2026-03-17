@@ -1,9 +1,10 @@
 import json
 import os
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, Dict, Any
 from libcore_hng.core.base_config_model import BaseConfigModel
 from libcore_hng.configs.logger import LoggerConfig
+from libcore_hng.configs.gcp import GcpConfig
 from libcore_hng.utils.system import find_project_root
 
 T = TypeVar("T", bound="BaseConfig")
@@ -12,6 +13,9 @@ class BaseConfig(BaseConfigModel):
     
     logging: LoggerConfig = LoggerConfig()
     """ ロガー共通設定 """
+
+    gcp: GcpConfig = GcpConfig()
+    """ Google Cloud Platform 設定 """
 
     project_root_path: Path = Path(".")
     """ プロジェクトルートパス """
@@ -58,7 +62,9 @@ class BaseConfig(BaseConfigModel):
             config_dir = optional_config_dir
 
         # 設定ファイルを読み込んでマージする
-        merged = {}
+        merged: Dict[str, Any] = {}
+
+        # 統合された設定ファイルを読み込む
         for file_name in file_names:
             config_path = config_dir / file_name
             if not config_path.exists():
@@ -71,7 +77,7 @@ class BaseConfig(BaseConfigModel):
                 
                 # ファイルを復号化
                 raw_bytes = load_secret(config_path)
-                data = json.loads(raw_bytes.decode('utf-8'))
+                data = json.loads(raw_bytes.decode("utf-8"))
                 merged.update(data)
             else:
                 # --- 通常のJSONファイルの場合 ---

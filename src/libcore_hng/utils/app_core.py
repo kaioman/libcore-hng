@@ -35,7 +35,7 @@ class AppInitializer(Generic[T]):
 
         # デフォルト値補完
         if not config_file:
-            config_file = ("logger.json")
+            config_file = ("app_config.json")
         
         # 共通設定クラスインスタンス生成
         self.config: T = config_cls.load_config(base_file, *config_file)
