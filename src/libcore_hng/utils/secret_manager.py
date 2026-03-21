@@ -9,6 +9,9 @@ from typing import Union, Optional
 from google.cloud import secretmanager
 from cryptography.fernet import Fernet, InvalidToken
 from libcore_hng.exceptions import CryptoException
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
+import base64
 
 def _generate_subject_token(
     private_key_path: str, 
@@ -207,6 +210,45 @@ def _get_key() -> bytes:
         "復号鍵が見つかりません。環境変数 \'APP_SECRET_KEY\' または "
         "GCPの設定 (app_config.jsonと環境変数WIF_PRIVATE_KEY_PATH) を確認してください。"
     )
+
+def generate_key_pair() -> dict:
+    """
+    RSA秘密鍵と公開鍵のペアを生成し、JWK形式の公開鍵を返す。
+
+    Returns
+    -------
+    dict
+        秘密鍵（PEM形式）とJWK形式の公開鍵を含む辞書。
+    """
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048
+    )
+    public_key = private_key.public_key()
+    numbers = public_key.public_numbers()
+
+    def to_base64url(val):
+        return base64.urlsafe_b64encode(val.to_bytes((val.bit_length() + 7) // 8, 'big')).decode('utf-8').rstrip('=')
+
+    jwk = {
+        "keys": [{
+            "kty": "RSA",
+            "alg": "RS256",
+            "use": "sig",
+            "kid": "wif-key-01", # 任意のID
+            "n": to_base64url(numbers.n),
+            "e": to_base64url(numbers.e)
+        }]
+    }
+
+    return {
+        "private_key_pem": private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        ).decode('utf-8'),
+        "public_key_jwk": jwk
+    }
 
 def load_secret(file_path: Union[str, Path]) -> bytes:
     """
