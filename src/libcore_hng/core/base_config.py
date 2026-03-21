@@ -113,10 +113,13 @@ class BaseConfig(BaseConfigModel):
             if file_name.endswith(".enc"):
                 # --- 暗号化ファイル (.enc) の場合 ---
                 # 循環参照を避けるため関数内でインポート
-                from libcore_hng.utils.secret_manager import load_secret
+                from libcore_hng.utils.secret_manager import load_secret_with_gcp_config
+                
+                # GCP設定を辞書として渡す
+                gcp_config_dict = merged.get("gcp", {})
                 
                 # ファイルを復号化
-                raw_bytes = load_secret(config_path)
+                raw_bytes = load_secret_with_gcp_config(config_path, gcp_config_dict)
                 data = json.loads(raw_bytes.decode("utf-8"))
                 merged.update(data)
             else:
@@ -125,7 +128,7 @@ class BaseConfig(BaseConfigModel):
                     data = json.load(f)
                     merged.update(data)
             loaded_config_files.append(file_name) # 正常に読み込まれたファイル名を追加
-                    
+        
         instance = cls(**merged)
         
         # プロジェクトルートパスを設定
