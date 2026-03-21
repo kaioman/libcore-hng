@@ -1,9 +1,10 @@
 import json
 import os
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, Dict, Any
 from libcore_hng.core.base_config_model import BaseConfigModel
 from libcore_hng.configs.logger import LoggerConfig
+from libcore_hng.configs.gcp import GcpConfig
 from libcore_hng.utils.system import find_project_root
 
 T = TypeVar("T", bound="BaseConfig")
@@ -12,6 +13,9 @@ class BaseConfig(BaseConfigModel):
     
     logging: LoggerConfig = LoggerConfig()
     """ ロガー共通設定 """
+
+    gcp: GcpConfig = GcpConfig()
+    """ Google Cloud Platform 設定 """
 
     project_root_path: Path = Path(".")
     """ プロジェクトルートパス """
@@ -58,13 +62,73 @@ class BaseConfig(BaseConfigModel):
             config_dir = optional_config_dir
 
         # 設定ファイルを読み込んでマージする
-        merged = {}
+        merged: Dict[str, Any] = {}
+        loaded_config_files = [] # 正常に読み込まれた設定ファイル名を保持
+
+        # 統合された設定ファイルを読み込む
         for file_name in file_names:
             config_path = config_dir / file_name
-            if config_path.exists():
+            if not config_path.exists():
+                # ファイルが存在しない場合はエラーログを出力し、例外を発生させる
+                from libcore_hng.exceptions import ConfigurationException
+                
+                # app_config.json の内容を取得
+                app_config_content = "N/A"
+                
+                # app_config.jsonのサンプル内容を用意
+                app_config_sample_data = {
+                    "logging": {
+                        "logfile_name": "libcore-hng.log",
+                        "logfile_name_suffix": 0,
+                        "logfolder_name": "./log",
+                        "logformat": "%(levelname)-7s : %(asctime)s : %(message)s",
+                        "loglevel": 20,
+                        "log_prefix_format": "[ {} {} ]",
+                        "log_depth": "+",
+                        "log_interval": 1,
+                        "log_backupCount": 7,
+                        "log_rotation_when": "midnight",
+                        "log_file_encording": "utf-8",
+                        "log_rotation_utc_time": False  # Pythonでは大文字のFalse
+                    },
+                    "gcp": {
+                        "project_id": "test-project",
+                        "secret_name": "test-secret"
+                    }
+                }
+                app_config_sample = json.dumps(app_config_sample_data, indent=2, ensure_ascii=False)
+
+                # app_config.jsonが存在する場合は内容を読み込む
+                app_config_content = f"ファイルが存在しません。以下の内容で作成してください。\n```json\n{app_config_sample}\n```"
+
+                files_str =  ' '.join(loaded_config_files) if loaded_config_files else 'なし'
+                error_message = (
+                    f"設定ファイル `{file_name}` が見つかりません。\n"
+                    f"現在の設定ディレクトリ: `{config_dir}`\n"
+                    f"読み込まれた設定ファイル: `{files_str}`\n"
+                    f"app_config.json の内容（サンプル）:\n{app_config_content}"
+                )
+                print(f"設定ファイル \'{file_name}\' の読み込みに失敗しました。詳細: {error_message}")
+                raise ConfigurationException(error_message)
+            if file_name.endswith(".enc"):
+                # --- 暗号化ファイル (.enc) の場合 ---
+                # 循環参照を避けるため関数内でインポート
+                from libcore_hng.utils.secret_manager import load_secret_with_gcp_config
+                
+                # GCP設定を辞書として渡す
+                gcp_config_dict = merged.get("gcp", {})
+                
+                # ファイルを復号化
+                raw_bytes = load_secret_with_gcp_config(config_path, gcp_config_dict)
+                data = json.loads(raw_bytes.decode("utf-8"))
+                merged.update(data)
+            else:
+                # --- 通常のJSONファイルの場合 ---
                 with open(config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     merged.update(data)
+            loaded_config_files.append(file_name) # 正常に読み込まれたファイル名を追加
+        
         instance = cls(**merged)
         
         # プロジェクトルートパスを設定

@@ -15,7 +15,9 @@ dependencies = [
     "pydantic",
     "psutil",
     "pandas",
-    "openpyxl"
+    "openpyxl",
+    "cryptography",
+    "google-cloud-secret-manager"
 ]
 
 [tool.setuptools]

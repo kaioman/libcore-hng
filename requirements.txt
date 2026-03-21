@@ -2,3 +2,6 @@ pydantic
 psutil
 pandas
 openpyxl
+cryptography
+google-cloud-secret-manager
+Pillow
