@@ -8,7 +8,6 @@ class GcpConfig(BaseConfigModel):
     このモデルは、GCPと連携するための必要な設定パラメータを定義する。
     例えば、プロジェクトIDやSecret Managerのシークレット名など。
     """
-    
     project_id: str = Field(default="", description="Google CloudのProjectID")
     """ Google Cloud プロジェクトID """
 
@@ -57,3 +56,6 @@ class GcpConfig(BaseConfigModel):
 
     sts_subject_token_type: str = Field(default="urn:ietf:params:oauth:token-type:jwt", description="STSトークン交換時のSubjectTokenタイプ")
     """ STSトークン交換時のSubjectTokenタイプ """
+
+gcp_config: GcpConfig | None = None
+""" GCP設定インスタンスを保持するグローバル変数 """

@@ -1,5 +1,6 @@
 import libcore_hng.core.base_config as bcfg
 import libcore_hng.utils.app_logger as app_logger
+import libcore_hng.configs.gcp as app_gcp
 from typing import TypeVar, Generic
 
 T = TypeVar("T", bound=bcfg.BaseConfig)
@@ -42,6 +43,9 @@ class AppInitializer(Generic[T]):
 
         # ロガー設定
         app_logger.setting(self.config)
+
+        # GCP設定をグローバル変数に保存
+        app_gcp.gcp_config = self.config.gcp
         
 core: AppInitializer[T] | None = None
 """ アプリケーション初期化済みインスタンスを保持するグローバル変数 """
