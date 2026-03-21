@@ -142,7 +142,7 @@ def _get_secret_with_wif(
     except Exception as e:
         raise CryptoException(f"Workload Identity Federation経由でのSecret Managerからの鍵取得に失敗しました: {e}")
 
-def _get_gcp_secret(gcp_config: GcpConfig) -> Optional[bytes]:
+def _get_gcp_secret_key(gcp_config: GcpConfig) -> Optional[bytes]:
     """
     GCP Secret Managerから復号鍵を取得する。Workload Identity Federationが設定されている場合はそちらを優先する。
 
@@ -198,13 +198,13 @@ def _get_gcp_secret(gcp_config: GcpConfig) -> Optional[bytes]:
 
     # 環境変数または通常のGCP認証で取得
     project_id = gcp_config.project_id if gcp_config.project_id else os.environ.get("GCP_PROJECT_ID")
-    base_secret_name = gcp_config.secret_name if gcp_config.secret_name else os.environ.get("GCP_SECRET_NAME")
+    secret_name_from_config = gcp_config.secret_name if gcp_config.secret_name else os.environ.get("GCP_SECRET_NAME")
     app_env = gcp_config.app_env if gcp_config.app_env else os.environ.get("APP_ENV", "dev")
 
-    if not project_id or not base_secret_name:
+    if not project_id or not secret_name_from_config:
         return None
 
-    secret_id = f"{base_secret_name}-{app_env}"
+    secret_id = f"{secret_name_from_config}-{app_env}"
     
     try:
         client = secretmanager.SecretManagerServiceClient()
@@ -235,7 +235,7 @@ def _get_key(gcp_config: GcpConfig) -> bytes:
 
     # 2. 環境変数が未設定の場合はGCP Secret Managerから取得する
     #    (Workload Identity Federationが設定されていればそちらを優先)
-    gcp_key = _get_gcp_secret(gcp_config)
+    gcp_key = _get_gcp_secret_key(gcp_config)
     if gcp_key:
         return gcp_key
 
