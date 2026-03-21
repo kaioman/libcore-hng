@@ -5,3 +5,4 @@ openpyxl
 cryptography
 google-cloud-secret-manager
 Pillow
+PyJWT

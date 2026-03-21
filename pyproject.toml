@@ -17,7 +17,9 @@ dependencies = [
     "pandas",
     "openpyxl",
     "cryptography",
-    "google-cloud-secret-manager"
+    "google-cloud-secret-manager",
+    "Pillow",
+    "PyJWT"
 ]
 
 [tool.setuptools]
