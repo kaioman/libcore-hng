@@ -1,17 +1,168 @@
 import os
+import time
+import jwt
+import requests
+import google.oauth2.credentials
+import libcore_hng.utils.app_core as app
 from pathlib import Path
 from typing import Union, Optional
 from google.cloud import secretmanager
 from cryptography.fernet import Fernet, InvalidToken
 from libcore_hng.exceptions import CryptoException
 
+def _generate_subject_token(
+    private_key_path: str, 
+    issuer: str, 
+    project_number: str, 
+    pool_id: str, 
+    provider_id: str) -> str:
+    """
+    秘密鍵で署名した自前JWTを生成する
+
+    Parameters
+    ----------
+    private_key_path : str
+        秘密鍵ファイルのパス
+    issuer : str
+        JWTの発行者
+    project_number : str
+        GCPプロジェクト番号
+    pool_id : str
+        Workload Identity Pool ID
+    provider_id : str
+        Workload Identity Provider ID
+
+    Returns
+    -------
+    str
+        生成されたJWT
+    """
+    
+    now = int(time.time())
+    with open(private_key_path, "rb") as f:
+        private_key_pem = f.read()
+
+    payload = {
+        "iss": issuer,
+        "sub": "libcore-hng-wif-user", 
+        "aud": f"https://iam.googleapis.com/projects/{project_number}/locations/global/workloadIdentityPools/{pool_id}/providers/{provider_id}",
+        "iat": now,
+        "exp": now + 3600, # 有効期限1時間
+    }
+
+    headers = {"kid": app.core.config.gcp.kid}
+    return jwt.encode(payload, private_key_pem, algorithm="RS256", headers=headers)
+
+def _get_secret_with_wif(
+    secret_id: str, 
+    project_number: str, 
+    pool_id: str, provider_id: str, 
+    service_account_email: str, 
+    issuer: str, 
+    private_key_path: str) -> Optional[bytes]:
+    """
+    Workload Identity Federation を使用して Secret Manager からシークレットを取得する
+
+    Parameters
+    ----------
+    secret_id : str
+        取得するシークレットのID
+    project_number : str
+        GCPプロジェクト番号
+    pool_id : str
+        Workload Identity Pool ID
+    provider_id : str
+        Workload Identity Provider ID
+    service_account_email : str
+        なりすますサービスアカウントのメールアドレス
+    issuer : str
+        JWTの発行者
+    private_key_path : str
+        秘密鍵ファイルのパス
+
+    Returns
+    -------
+    Optional[bytes]
+        取得したシークレットのバイト列。見つからない場合はNone
+
+    Raises
+    ------
+    CryptoException
+        Workload Identity Federation経由でのSecret Managerからの鍵取得に失敗した場合
+    """
+    try:
+        # 1. 自前JWT（Subject Token）を作成
+        subject_token = _generate_subject_token(private_key_path, issuer, project_number, pool_id, provider_id)
+
+        # 2. Google STS エンドポイントに投げて、Googleの一時トークンに交換
+        sts_url = app.core.config.gcp.sts_url
+        data = {
+            "audience": f"//iam.googleapis.com/projects/{project_number}/locations/global/workloadIdentityPools/{pool_id}/providers/{provider_id}",
+            "grantType": app.core.config.gcp.sts_grant_type,
+            "requestedTokenType": app.core.config.gcp.sts_requested_token_type,
+            "scope": app.core.config.gcp.sts_scope,
+            "subjectToken": subject_token,
+            "subjectTokenType": app.core.config.gcp.sts_subject_token_type,
+        }
+        
+        response = requests.post(sts_url, data=data)
+        response.raise_for_status()
+        federated_token = response.json()["access_token"]
+
+        # 3. サービスアカウントになりすます (Impersonation)
+        iam_url = f"{app.core.config.gcp.iam_credentials_url_base}/v1/projects/-/serviceAccounts/{service_account_email}:generateAccessToken"
+        headers = {"Authorization": f"Bearer {federated_token}"}
+        payload = {"scope": [app.core.config.gcp.sts_scope]}
+        
+        response = requests.post(iam_url, headers=headers, json=payload)
+        response.raise_for_status()
+        final_access_token = response.json()["accessToken"]
+
+        # 4. 最終的なトークンを使って Secret Manager から値を取得
+        client = secretmanager.SecretManagerServiceClient(
+            credentials=google.oauth2.credentials.Credentials(final_access_token)
+        )
+        name = f"projects/{project_number}/secrets/{secret_id}/versions/latest"
+        response = client.access_secret_version(request={"name": name})
+        return response.payload.data
+    except Exception as e:
+        raise CryptoException(f"Workload Identity Federation経由でのSecret Managerからの鍵取得に失敗しました: {e}")
+
 def _get_gcp_secret() -> Optional[bytes]:
     """
-    GCP Secret Managerから復号鍵を取得する
+    GCP Secret Managerから復号鍵を取得する。Workload Identity Federationが設定されている場合はそちらを優先する。
+
+    Returns
+    -------
+    Optional[bytes]
+        GCP Secret Managerから取得した復号鍵。設定がない場合はNone。
+
+    Raises
+    ------
+    CryptoException
+        GCP Secret Managerからの鍵取得に失敗した場合
     """
-    project_id = os.environ.get("GCP_PROJECT_ID")
-    base_secret_name = os.environ.get("GCP_SECRET_NAME")
-    app_env = os.environ.get("APP_ENV", "dev") # デフォルトは dev
+    if app.core and app.core.config.gcp.wif_enabled:
+        # Workload Identity Federation が有効な場合
+        project_number = app.core.config.gcp.project_number
+        pool_id = app.core.config.gcp.pool_id
+        provider_id = app.core.config.gcp.provider_id
+        service_account_email = app.core.config.gcp.service_account_email
+        issuer = app.core.config.gcp.issuer
+        private_key_path = os.environ.get("WIF_PRIVATE_KEY_PATH", os.path.expanduser("~/.ssh/uw_private_key.pem")) # 環境変数優先、なければデフォルトパス
+        secret_id = f"{app.core.config.gcp.secret_name}-{app.core.config.gcp.app_env}"
+
+        if all([project_number, pool_id, provider_id, service_account_email, issuer, private_key_path, secret_id]):
+            return _get_secret_with_wif(secret_id, project_number, pool_id, provider_id, service_account_email, issuer, private_key_path)
+        else:
+            # Workload Identity Federation の設定が不完全な場合
+            from libcore_hng.utils.app_logger import app_logger
+            app_logger.warning("Workload Identity Federation の設定が不完全です。環境変数またはapp_config.jsonを確認してください。")
+
+    # 環境変数または通常のGCP認証で取得
+    project_id = app.core.config.gcp.project_id if app.core and app.core.config.gcp.project_id else os.environ.get("GCP_PROJECT_ID")
+    base_secret_name = app.core.config.gcp.secret_name if app.core and app.core.config.gcp.secret_name else os.environ.get("GCP_SECRET_NAME")
+    app_env = app.core.config.gcp.app_env if app.core and app.core.config.gcp.app_env else os.environ.get("APP_ENV", "dev")
 
     if not project_id or not base_secret_name:
         return None
@@ -46,14 +197,15 @@ def _get_key() -> bytes:
         return env_key.encode()
 
     # 2. 環境変数が未設定の場合はGCP Secret Managerから取得する
+    #    (Workload Identity Federationが設定されていればそちらを優先)
     gcp_key = _get_gcp_secret()
     if gcp_key:
         return gcp_key
 
     # 鍵が見つからなかった場合
     raise CryptoException(
-        "復号鍵が見つかりません。環境変数 'APP_SECRET_KEY' または "
-        "'GCP_PROJECT_ID' および 'GCP_SECRET_NAME' を確認してください。"
+        "復号鍵が見つかりません。環境変数 \'APP_SECRET_KEY\' または "
+        "GCPの設定 (app_config.jsonと環境変数WIF_PRIVATE_KEY_PATH) を確認してください。"
     )
 
 def load_secret(file_path: Union[str, Path]) -> bytes:

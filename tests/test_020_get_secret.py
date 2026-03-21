@@ -11,7 +11,7 @@ PROJECT_NUMBER = "432034677652"
 POOL_ID = "uw-prem-dev-pool"
 PROVIDER_ID = "google-oidc-dev-provider"
 SERVICE_ACCOUNT_EMAIL = "uw-secret-dev@gen-lang-client-0452718754.iam.gserviceaccount.com"
-SECRET_ID = "DECRYPTION_KEY_DEV"
+SECRET_ID = "DECRYPTION_KEY-dev"
 
 # GCP側で設定した Issuer URL (1文字でも違うとNG)
 ISSUER = "https://unchainworks.local" 

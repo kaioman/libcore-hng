@@ -1,7 +1,0 @@
-pydantic
-psutil
-pandas
-openpyxl
-cryptography
-keyring
-Pillow
