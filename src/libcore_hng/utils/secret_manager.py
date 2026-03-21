@@ -304,9 +304,9 @@ def load_secret(file_path: Union[str, Path]) -> bytes:
         ファイルの読み込みまたは復号に失敗した場合
     """
     # 循環参照を避けるため関数内でインポート
-    import libcore_hng.utils.app_core as app
-    if app.core:
-        return load_secret_with_gcp_config(file_path, app.core.config.gcp.model_dump())
+    import libcore_hng.configs.gcp as app_gcp
+    if app_gcp.gcp_config:
+        return load_secret_with_gcp_config(file_path, app_gcp.gcp_config)
     else:
         # app.core が初期化されていない場合は、GCP設定なしでキーを取得しようとする
         # これは例えば、設定ファイル自体が暗号化されているようなケースで発生し得る

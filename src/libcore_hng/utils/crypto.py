@@ -1,7 +1,5 @@
 from cryptography.fernet import Fernet
-from libcore_hng.configs.gcp import GcpConfig
 from libcore_hng.utils.secret_manager import _get_gcp_secret_key
-from typing import Optional
 
 def generate_key() -> bytes:
     """
@@ -60,14 +58,14 @@ def create_encryption_file_from_secret_manager(file_path: str, secret_name: str)
     bytes
         暗号化に使用したキー
     """
-    # app_coreが初期化されていることを前提とする
-    import libcore_hng.utils.app_core as app
-    if not app.core or not app.core.config or not app.core.config.gcp:
-        raise ValueError("app_coreが初期化されていないか、GCP設定がありません。")
 
+    # GCP設定の存在チェック
+    import libcore_hng.configs.gcp as app_gcp
+    if not app_gcp or not app_gcp.gcp_config:
+        raise ValueError("GCP設定が見つかりません。app_coreの初期化を確認してください。")
+    
     # Secret Managerから鍵を取得
-    gcp_config = app.core.config.gcp.model_copy(update={"secret_name": secret_name})
-    key = _get_gcp_secret_key(gcp_config)
+    key = _get_gcp_secret_key(app_gcp.gcp_config)
     
     if not key:
         raise ValueError(f"Secret Managerから鍵 '{secret_name}' を取得できませんでした。")
