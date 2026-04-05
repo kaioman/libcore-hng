@@ -206,3 +206,13 @@ services:
 ```
 
 ※ 開発時やデプロイ時には、Docker Composeが読み込む `.env` ファイルなどにこれらの変数を記述しておくことで、安全に鍵情報や設定をコンテナへ渡すことができます。
+
+---
+
+### `.clinerules` ファイルの取得方法
+
+本リポジトリで一元管理している `.clinerules` ファイルは、以下のコマンドで取得できます。
+
+```bash
+curl.exe -L -o .clinerules https://raw.githubusercontent.com/kaioman/libcore-hng/main/.clinerules
+```

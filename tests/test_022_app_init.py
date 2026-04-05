@@ -1,13 +1,13 @@
-import test_022_config
+import tests.test_023_config as test_023_config
 from libcore_hng.utils.app_core import AppInitializer
 
-class TestAppInitializer(AppInitializer[test_022_config.EncTestConfig]):
+class TestAppInitializer(AppInitializer[test_023_config.EncTestConfig]):
     """
     AppInitializer拡張クラス
     """
     def __init__(self, base_file: str = __file__, *config_file: str):
         # 基底コンストラクタに拡張Configクラスを渡す
-        super().__init__(test_022_config.EncTestConfig, base_file, *config_file)
+        super().__init__(test_023_config.EncTestConfig, base_file, *config_file)
 
 core: TestAppInitializer | None = None
 """ AppInitializer拡張クラスインスタンス """
