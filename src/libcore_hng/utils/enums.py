@@ -43,3 +43,17 @@ class PlatForm(Enum):
 
     LINUX = 'Linux'
     """ Linux """
+    
+class OnConflict(Enum):
+    """
+    名前衝突時の挙動
+    """
+
+    ERROR = 'error'
+    """ エラーを発生させる """
+
+    SKIP = 'skip'
+    """ 既存ファイルをスキップする """
+
+    OVERWRITE = 'overwrite'
+    """ 既存ファイルを上書きする """
