@@ -7,9 +7,18 @@ class Test(BaseModel, LoggingMixin):
 
     dammy_key: str = "A"
     """ ダミーキー """
+
+    dammy_key3: str = "C"
+    """ ダミーキー3 """
     
+class Test2(BaseModel, LoggingMixin):
+    
+    dammy_key2: str = "B"
+    """ ダミーキー2 """
+
 class EncTestConfig(BaseConfig):
     test: Test = Test()
+    test2: Test2 = Test2()
 
     @classmethod
     def load_config(cls, base_file, *config_file) -> "EncTestConfig":
