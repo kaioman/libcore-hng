@@ -1,4 +1,4 @@
-import tests.test_023_config as test_023_config
+import test_023_config
 from libcore_hng.utils.app_core import AppInitializer
 
 class TestAppInitializer(AppInitializer[test_023_config.EncTestConfig]):
