@@ -3,4 +3,4 @@ __pycache__
 libcore_hng.egg-info
 log
 auth
-configs/app_config.json
+configs/gcp_config.json
