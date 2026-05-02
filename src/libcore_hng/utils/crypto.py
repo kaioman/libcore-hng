@@ -42,6 +42,35 @@ def create_encryption_file(file_path: str, key: bytes | str | None = None) -> by
 
     return key
 
+def create_decryption_file(input_file, output_file, key):
+    """
+    暗号化されたファイルを復号し、ファイルに保存する
+
+    Parameters
+    ----------
+    input_file : str
+        復号する対象ファイルのパス
+    output_file : str
+        復号したファイルを保存するファイルパス
+    key : bytes
+        暗号化に使用するキー
+
+    """
+
+    # Fernetオブジェクトを生成
+    f = Fernet(key)
+
+    # 暗号化されたファイルを読み込む
+    with open(input_file, "rb") as file:
+        encrypted_data = file.read()
+
+    # データを復号する
+    decrypted_data = f.decrypt(encrypted_data)
+
+    # 復号されたデータをファイルに出力する
+    with open(output_file, "wb") as f:
+        f.write(decrypted_data)
+
 def create_encryption_file_from_secret_manager(file_path: str, secret_name: str) -> bytes:
     """
     指定されたファイルを暗号化し、GCP Secret Managerから取得した鍵を使用して拡張子 .enc を付与して保存する。
