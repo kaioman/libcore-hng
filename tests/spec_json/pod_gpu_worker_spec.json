@@ -1,0 +1,13 @@
+{
+    "name": "personyx_runpod",
+    "templateId": "1lfx7nqixt",
+    "computeType": "GPU",
+    "networkVolumeId": "ztkp3vnlzd",
+    "volumeMountPath": "/workspace",
+    "vcpuCount": 32,
+    "containerDiskInGb": 1,
+    "gpuTypeIds": [
+        "NVIDIA GeForce RTX 3090"
+    ],
+    "gpuCount": 1
+}
