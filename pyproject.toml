@@ -22,6 +22,9 @@ dependencies = [
     "PyJWT"
 ]
 
+[project.scripts]
+decrypt-to-encrypt = "libcore_hng.cli.decrypt_to_encrypt:main"
+
 [tool.setuptools]
 package-dir = { "" = "src" }
 
