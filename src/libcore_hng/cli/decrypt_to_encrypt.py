@@ -71,7 +71,7 @@ def run(secret_key: str, encrypt_file_str: str) -> None:
             else:
                 print(f"[PROCESS] ファイル変更を検知しました。ファイルを再暗号化しています...")
                 # 編集したjsonファイルを暗号化する
-                create_encryption_file(tmp_json_str, secret_key)
+                create_encryption_file(tmp_json_str, str(encrypt_file_path), secret_key)
                 print(f"[SUCCESS] 暗号化ファイルの更新が完了しました。")
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] メモ帳の起動、または実行中にエラーが発生しました: {e}")
