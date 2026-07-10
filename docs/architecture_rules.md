@@ -9,7 +9,14 @@
 - 例外・エラー処理: [src/libcore_hng/exceptions](src/libcore_hng/exceptions) 配下の独自例外
 - ユーティリティ: [src/libcore_hng/utils](src/libcore_hng/utils) 配下の各モジュール
 
-## 2. 根拠となるファイル
+## 2. バージョン管理方針
+
+- バージョン更新は release ブランチでのみ実施する
+- tbump による変更は main ブランチへマージしない
+- main ブランチのバージョン番号は最新リリースと一致しない場合がある
+- PyPI の公開バージョンを正とする
+
+## 3. 根拠となるファイル
 
 - [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py)
   - 設定ロードとプロジェクトルート解決を担当
@@ -20,7 +27,7 @@
 - [src/libcore_hng/core/base_app_exception.py](src/libcore_hng/core/base_app_exception.py)
   - 例外ラッパーの基底実装
 
-## 3. 推奨事項
+## 4. 推奨事項
 
 - 新しい機能は「コア」「ユーティリティ」「例外」「設定」の責務に分けて追加する。
 - 依存関係は上位モジュールから下位モジュールへ一方向に流れるように保つ。
