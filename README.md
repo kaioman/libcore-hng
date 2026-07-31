@@ -18,6 +18,8 @@ libcore-hng は、設定管理・ロギング・例外処理・暗号化・フ�
 - 設定や秘密情報の扱いは、既存の共通基盤を通じて行ってください。
 - 実装の詳細や開発ルールは docs 配下を参照してください。
 - 設計書・ルール文書・[.github/copilot-instructions.md](.github/copilot-instructions.md) は、他プロジェクトでの雛形としても活用できます。
+- ログのローテーションは `TimedRotatingFileHandler` ベースで、既定設定で `when="midnight"`、`interval=1` により日次で切り替わる構成です。
+- アーカイブ済ログファイルの保持件数は `log_backupCount` により制御され、古いログは `doRollover()` 実行時に削除対象として扱われます。
 
 ## 参考ドキュメント
 
