@@ -1,6 +1,6 @@
 env
 __pycache__
 libcore_hng.egg-info
-log
+logs
 auth
 configs/gcp_config.json

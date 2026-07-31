@@ -1,0 +1,8 @@
+import libcore_hng.utils.app_core as app
+from libcore_hng.core.base_config import BaseConfig
+
+# アプリ初期化
+app.init_app(BaseConfig, __file__, "app_config.json")
+
+# ログテスト
+app.app_logger.info("test_029_logger_rotation.py: start")
