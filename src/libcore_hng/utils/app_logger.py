@@ -377,7 +377,7 @@ class CustomTimedRotatingFileHandler(TimedRotatingFileHandler):
         str
             アーカイブ済ログファイル名
         """ 
-        base, ext  = os.path.splitext(default_name)
+        base, ext = os.path.splitext(default_name)
         d = datetime.now().strftime("%Y-%m-%d")
         return f"{base}.{d}{ext}"
 
