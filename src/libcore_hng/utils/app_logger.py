@@ -1,6 +1,7 @@
 import os
 import logging
 import functools
+import time
 import libcore_hng.utils.helpers as helper
 from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
@@ -79,7 +80,6 @@ def loggerDecorator(outputString, args_print = []):
     return _loggerDecorator
 
 def setting(base_cfg: BaseConfig):
-
     """
     ロガー設定
 
@@ -123,8 +123,7 @@ def setting(base_cfg: BaseConfig):
     global logger_config
     logger_config = base_cfg.logging
     
-def getLogFileName(log_cfg: LoggerConfig):
-    
+def getLogFileName(log_cfg: LoggerConfig):    
     """
     ログファイル名取得
 
@@ -150,7 +149,14 @@ def getLogFileName(log_cfg: LoggerConfig):
     return logFileName
 
 def set_depth(depth: int):
-    
+    """
+    ネストの深さを設定する
+
+    Parameters
+    ----------
+    depth : int
+        ネストの深さ
+    """
     # ネストの深さを設定
     thread_local.depth = depth
 
@@ -349,7 +355,82 @@ def info(message: str, console_logging: bool = True):
     return logging.info(logMessage)
 
 class CustomTimedRotatingFileHandler(TimedRotatingFileHandler):
+    """
+    カスタムの時間ベースローテーションファイルハンドラ
+
+    Notes
+    -----
+    - TimedRotatingFileHandler を継承し、ローテーション時のアーカイブ済ログファイル名をカスタマイズする。    
+    """
+
     def rotation_filename(self, default_name):
-        base, ext = os.path.splitext(self.baseFilename)
+        """
+        ローテーション時に使用するアーカイブ済ログファイル名を生成する
+
+        Parameters
+        ----------
+        default_name : str
+            デフォルトのログファイル名
+        
+        Returns
+        -------
+        str
+            アーカイブ済ログファイル名
+        """ 
+        base, ext  = os.path.splitext(default_name)
         d = datetime.now().strftime("%Y-%m-%d")
         return f"{base}.{d}{ext}"
+
+    def doRollover(self):
+        """
+        ログローテーション処理を実行する
+
+        TimedRotatingFileHandler がローテーション必要と判断した場合に呼び出される。
+        現在のログファイルをアーカイブ済ログファイルにリネームし、必要に応じて古いアーカイブ済ログファイルを削除する。
+
+        Notes
+        -----
+        - ログローテーションの前に、現在のログファイル名を取得し、アーカイブ済ログファイル名を生成する。
+        - 現在のログファイルが存在する場合、アーカイブ済ログファイル名にリネームする。既にアーカイブ済ログファイルが存在する場合は削除する。
+        - バックアップ数が設定されている場合、古いアーカイブ済ログファイルを削除する。削除対象は、アーカイブ済ログファイル名の接頭辞が一致するファイルで、最も古いものから順に削除される。
+        """
+
+        # 現在のログファイルハンドルを閉じる
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+        
+        # ログローテーション前の現在のログファイル名とアーカイブ済ログファイル名を取得
+        current_path = self.baseFilename
+        rotated_path = self.rotation_filename(current_path)
+
+        # 同名バックアップファイルが存在する場合は削除してから、現在のログを移動する
+        if os.path.exists(current_path):
+            if os.path.exists(rotated_path):
+                os.remove(rotated_path)
+            os.replace(current_path, rotated_path)
+
+        # 生成済みバックアップファイルを収集して、保持件数を超えたものを削除する
+        if self.backupCount > 0:
+            # 生成済みバックアップファイルを収集する
+            log_dir = os.path.dirname(current_path)
+            base_name = os.path.basename(current_path)
+            base_name_without_ext, ext = os.path.splitext(base_name)
+            archived_files = [
+                os.path.join(log_dir, f)
+                for f in os.listdir(log_dir)
+                if f.startswith(base_name_without_ext + ".") and f.endswith(ext)
+            ]
+            archived_files.sort(key=os.path.getmtime)
+
+            # バックアップ件数を超えた古いアーカイブ済ログファイルを削除する
+            while len(archived_files) > self.backupCount:
+                os.remove(archived_files.pop(0))
+
+        # 新しいログファイルを開く
+        if not self.delay:
+            self.stream = self._open()
+
+        # 次回ローテーション時刻を標準実装と同様に更新
+        current_time = int(time.time())
+        self.rolloverAt = self.computeRollover(current_time)

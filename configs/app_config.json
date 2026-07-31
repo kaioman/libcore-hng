@@ -2,7 +2,7 @@
     "logging": {
         "logfile_name": "libcore-hng.log",
         "logfile_name_suffix": 0,
-        "logfolder_name": "./log",
+        "logfolder_name": "./logs",
         "logformat": "%(levelname)-7s : %(asctime)s : %(message)s",
         "loglevel": 20,
         "log_prefix_format": "[ {} {} ]",
