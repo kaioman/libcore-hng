@@ -1,7 +1,7 @@
 import libcore_hng.core.base_config as bcfg
 import libcore_hng.utils.app_logger as app_logger
 import libcore_hng.configs.gcp as app_gcp
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, cast
 
 T = TypeVar("T", bound=bcfg.BaseConfig)
 
@@ -13,7 +13,7 @@ class AppInitializer(Generic[T]):
     - ロガー設定
     """
 
-    def __init__(self, config_cls: type[T], base_file: str = __file__, *config_file: str):
+    def __init__(self, config_cls: type[T] = bcfg.BaseConfig, base_file: str = __file__, *config_file: str):
         """
         コンストラクタ
 
@@ -47,10 +47,10 @@ class AppInitializer(Generic[T]):
         # GCP設定をグローバル変数に保存
         app_gcp.gcp_config = self.config.gcp
         
-core: AppInitializer[T] | None = None
+core: AppInitializer[bcfg.BaseConfig] | None = None
 """ アプリケーション初期化済みインスタンスを保持するグローバル変数 """
 
-def init_app(config_cls: type[T], base_file: str = __file__, *config_file: str) -> AppInitializer[T]:
+def init_app(config_cls: type[T] = bcfg.BaseConfig, base_file: str = __file__, *config_file: str) -> AppInitializer[bcfg.BaseConfig]:
     """
     アプリケーションの初期化処理を一度だけ実行する関数
 
@@ -77,5 +77,6 @@ def init_app(config_cls: type[T], base_file: str = __file__, *config_file: str) 
     """
 
     global core
-    core = AppInitializer(config_cls, base_file, *config_file)
-    return core
+    initializer = AppInitializer(config_cls, base_file, *config_file)
+    core = cast(AppInitializer[T], initializer)
+    return initializer

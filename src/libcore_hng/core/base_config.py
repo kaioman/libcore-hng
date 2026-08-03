@@ -121,12 +121,13 @@ class BaseConfig(BaseConfigModel):
                 # ファイルを復号化
                 raw_bytes = load_secret_with_gcp_config(config_path, gcp_config_dict)
                 data = json.loads(raw_bytes.decode("utf-8"))
-                merged.update(data)
+                _deep_merge_dict(merged, data)
             else:
                 # --- 通常のJSONファイルの場合 ---
                 with open(config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    merged.update(data)
+                    _deep_merge_dict(merged, data)
+
             loaded_config_files.append(file_name) # 正常に読み込まれたファイル名を追加
         
         instance = cls(**merged)
@@ -136,6 +137,13 @@ class BaseConfig(BaseConfigModel):
         
         # 自クラスインスタンスを共通設定クラスインスタンスとして返す
         return instance
+
+def _deep_merge_dict(base: dict[str, Any], incomiing: dict[str, Any]) -> None:
+    for key, value in incomiing.items():
+        if (key in base and isinstance(base[key], dict) and isinstance(value, dict)):
+            _deep_merge_dict(base[key], value)
+        else:
+            base[key] = value
 
 cfg: BaseConfig | None = None
 """ 共通設定クラスインスタンス """
