@@ -33,10 +33,6 @@ class AppInitializer(Generic[T]):
         BaseConfig
             ロードされた設定インスタンス
         """
-
-        # デフォルト値補完
-        if not config_file:
-            config_file = ("app_config.json")
         
         # 共通設定クラスインスタンス生成
         self.config: T = config_cls.load_config(base_file, *config_file)
@@ -49,6 +45,19 @@ class AppInitializer(Generic[T]):
         
 core: AppInitializer[bcfg.BaseConfig] | None = None
 """ アプリケーション初期化済みインスタンスを保持するグローバル変数 """
+
+def get_config(_: type[T]) -> T:
+    """
+    設定クラスのインスタンスを取得する関数
+
+    Returns
+    -------
+    CONFIG_CLS
+        設定クラスのインスタンス
+    """
+    if core is None:
+        raise RuntimeError("アプリケーションが初期化されていません。init_app() を先に呼び出してください。")
+    return cast(T, core.config)
 
 def init_app(config_cls: type[T] = bcfg.BaseConfig, base_file: str = __file__, *config_file: str) -> AppInitializer[bcfg.BaseConfig]:
     """
