@@ -33,101 +33,65 @@ libcore-hng は、設定管理・ロギング・例外処理・暗号化・フ�
 
 ## アプリ初期処理サンプル
 
-このプロジェクトでは、`AppInitializer` を用いてアプリケーションの初期化処理を行います。  
-初期化は一度だけ実行し、以降はグローバルインスタンス `app_core` を参照してください。
-
+このプロジェクトでは、`AppInitializer` を用いてアプリケーションの初期化処理を行います。
+共通の初期化は `libcore_hng.utils.app_core.init_app()` で行い、アプリごとの設定型はアプリ側で拡張します。
+また、アプリ固有の起動モジュール `app_init.py`(アプリごとに作成)で `config` をモジュールグローバルとして公開することで別ファイルからも拡張設定を型付きで参照できます。
+バージョン2.0.27以前との互換性を保つため、 `app.core.config` への参照も継続して利用できます
 ---
 
 ### アプリ初期化方法
 
-test_013_appinit.py
+アプリごとの起動モジュール例
+OverrideConfigクラスは拡張設定クラスの例(拡張設定クラスはBaseConfigを継承して作成する)
 
 ```python
-from libcore_hng.utils.app_core import AppInitializer
-from test_013_config import DerivedConfig
-
-class DerivedAppInitializer(AppInitializer[DerivedConfig]):
-    """
-    AppInitializer拡張クラス
-    """
-    def __init__(self, base_file: str = __file__, *config_file: str):
-        # 基底コンストラクタに拡張Configクラスを渡す
-        super().__init__(DerivedConfig, base_file, *config_file)
-
-ins: DerivedAppInitializer | None = None
-""" AppInitializer拡張クラスインスタンス """
-
-def init_app(base_file: str = __file__, *config_file: str) -> DerivedAppInitializer:
-    """
-    アプリケーション初期化
-    """
-    global ins
-    ins = DerivedAppInitializer(base_file, *config_file)
-    return ins
-
-```
-
-test_013_config.py
-
-```python
-from pydantic import BaseModel
+import libcore_hng.utils.app_core as app
 from libcore_hng.core.base_config import BaseConfig
-from libcore_hng.utils.app_logger_mixin import LoggingMixin
+from libcore_hng.configs.logger import LoggerConfig
 
-class Test(BaseModel, LoggingMixin):
-    """
-    テスト設定クラスモデル
-    """
+class ExtendedLoggerConfig(LoggerConfig):
+    ext1: str = "default"
 
-    append_member: str = "A"
-    """ 追加メンバー """
+class OverrideConfig(BaseConfig):
+    logging: ExtendedLoggerConfig = ExtendedLoggerConfig()
 
-class DerivedConfig(BaseConfig):
+# 設定クラス定義
+CONFIG_CLS = OverrideConfig
+
+def init_app(base_file: str, *config_file: str) -> CONFIG_CLS:
     """
-    BaseConfig拡張クラス
-    """
+    アプリケーションの初期化処理を実行する
+
+    Parameters
+    ----------
+    base_file : str
+        基準となるファイルパス (デフォルト: __file__)
+    *config_file : str, optional
+        ロガー設定ファイル名やその他設定ファイル
+        BaseConfig.load_config にそのまま渡されるため、複数指定可能
     
-    test: Test = Test()
-    """ テスト設定クラス """
+    Returns
+    -------
+    CONFIG_CLS
+        ロードされた設定インスタンス
+    """
+    global config
+    app.init_app(CONFIG_CLS, base_file, *config_file)
+    config = app.get_config(CONFIG_CLS)
+    return config
 
-    @classmethod
-    def load_config(cls, base_file, *config_file) -> "DerivedConfig":
-        """
-        BaseConfigのload_configをoverrride
-        戻り値の型は自身とする
-        """
-
-        # 基底側のload_configを実行してjsonファイルを読み込む
-        base = super().load_config(base_file, *config_file)
-        
-        # BaseConfigのインスタンスが持つ属性を取り出してDerivedConfigのインスタンスを返す
-        # **はキーワード引数に展開する構文(属性をclsに引数渡しする)
-        return cls(**base.__dict__)
+# アプリ初期化処理(import時に1度だけ実行される)
+config: CONFIG_CLS = init_app(__file__, "app_config.json", "app_config_ext.json")
 
 ```
 
-test_013.py
+起動モジュールの呼び出し例(app_initは起動モジュール名)
 
 ```python
-import test_013_appinit as app
-import test_013_sub as t013
+from app_init import config
 
-# アプリ初期化（最初の一度だけ呼び出す）
-app.init_app(__file__, "app_config.json")
-
-# 別ファイルのメソッド
-t013.test013()
-
-```
-
-test_013_sub.py
-
-```python
-import test_013_appinit as app
-
-def test013():
-    # 拡張Configクラスのメンバーをprint
-    print(app.ins.config.test.append_member)
+print(config.logging.ext1)
+print(config.logging.log_method_end_emoji)
 
 ```
 
