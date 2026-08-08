@@ -1,6 +1,7 @@
 import traceback
 import uuid
 import libcore_hng.utils.app_logger as app_logger
+from typing import Union, Optional
 
 class AppBaseException(Exception):
     
@@ -11,15 +12,15 @@ class AppBaseException(Exception):
     - 捕捉した例外をラップし、UUIDを付与してログやデバッグを容易にする
     """
     
-    def __init__(self, exc: Exception = None):
+    def __init__(self, exc: Optional[Union[str, Exception]] = None):
         
         """
         コンストラクタ
         
         Parameters
         ----------
-        exc : Exception, optional
-            捕捉した例外オブジェクト。指定しない場合は None。
+        exc : Union[str, Exception], optional
+            捕捉した例外オブジェクト、またはメッセージ文字列。指定しない場合は None。
             渡された例外の型・値・トレースバックを保持する。
         """
         
@@ -82,12 +83,16 @@ class AppBaseException(Exception):
         """
         例外の文字列表現。
 
-        - UUID, 型名, 値, トレースバックを含む
-        - 捕捉例外がない場合は UUID のみを返す
+        - Exceptionオブジェクトがある場合: UUID, 型名, 値, トレースバックを返す
+        - メッセージ文字列の場合: UUID, メッセージを返す
+        - どちらもない場合: UUID のみを返す
         """
         if self._exc_type:
             return (f"[{self._exc_uuid}] {self._exc_type.__name__}: {self._exc_value}\n"
                     f"{self._exc_traceback}")
+        elif self._exc_value:
+            return f"[{self._exc_uuid}] {self._exc_value}"
+
         return f"[{self._exc_uuid}] No exception captured."
     
     def __repr__(self):
