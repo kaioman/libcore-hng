@@ -1,6 +1,35 @@
 # libcore-hng
 
-A lightweight Python core package designed to unify access to diverse AI APIs and libraries. It provides a consistent, scalable foundation for building modular applications with clarity and flexibility.
+libcore-hng は、設定管理・ロギング・例外処理・暗号化・ファイル操作を共通化するための Python コアライブラリです。Web アプリケーション本体ではなく、他の Python アプリケーションから利用するための基盤として設計されています。さらに、設計ドキュメントや Copilot 向けの指示ファイルを含め、別のプロジェクトでもそのままひな型として再利用しやすい構成にもなっています。
+
+## このライブラリでできること
+
+- 設定ファイルの読み込みと共通化
+- ログ出力の統一
+- 独自例外の整理
+- 設定ファイルの暗号化・復号化
+- GCP Secret Manager との連携
+- Excel / JSON / ファイル操作の補助
+
+## 利用上の注意
+
+- このリポジトリは共通ライブラリであり、業務ロジックを持つアプリケーション本体ではありません。
+- 機密情報は平文でコミットしないでください。暗号化ファイルと Secret Manager を使って管理してください。
+- 設定や秘密情報の扱いは、既存の共通基盤を通じて行ってください。
+- 実装の詳細や開発ルールは docs 配下を参照してください。
+- 設計書・ルール文書・[.github/copilot-instructions.md](.github/copilot-instructions.md) は、他プロジェクトでの雛形としても活用できます。
+- ログのローテーションは `TimedRotatingFileHandler` ベースで、既定設定で `when="midnight"`、`interval=1` により日次で切り替わる構成です。
+- アーカイブ済ログファイルの保持件数は `log_backupCount` により制御され、古いログは `doRollover()` 実行時に削除対象として扱われます。
+
+## 参考ドキュメント
+
+- [docs/architecture.md](docs/architecture.md)
+- [docs/business_rules.md](docs/business_rules.md)
+- [docs/architecture_rules.md](docs/architecture_rules.md)
+- [docs/coding_rules.md](docs/coding_rules.md)
+- [docs/directory_rules.md](docs/directory_rules.md)
+- [docs/naming_rules.md](docs/naming_rules.md)
+- [docs/testing_rules.md](docs/testing_rules.md)
 
 ## アプリ初期処理サンプル
 
@@ -106,7 +135,7 @@ def test013():
 
 ### 設定ファイルの暗号化と復号鍵の管理
 
-機密情報を含む設定ファイルを保護するため、ファイルを暗号化し、その復号鍵を Google Cloud Secret Manager に安全に保存して管理します。開発環境と本番環境で同じ仕組みを使用することで、セキュアで統一された運用が可能です。
+機密情報を含む設定ファイルを保護するため、ファイルを暗号化し、その復号鍵を Google Cloud Secret Manager に安全に保存して管理します。開発環境と本番環境で同じ仕組みを使用することで、セキュアで統一された運用が可能です。詳細な運用方針は [docs/business_rules.md](docs/business_rules.md) を参照してください。
 
 #### 手順
 
@@ -132,7 +161,7 @@ print("以下の鍵を GCP Secret Manager に登録してください:")
 print(key.decode("utf-8"))
 ```
 
-`BaseConfig.load_config` は拡張子が `.enc` のファイルを自動的に検知し、暗号化ファイルとして復号・ロードする機能を備えています。
+`BaseConfig.load_config` は拡張子が `.enc` のファイルを自動的に検知し、暗号化ファイルとして復号・ロードする機能を備えています。実装上の詳細や制約は [docs/architecture.md](docs/architecture.md) と [docs/architecture_rules.md](docs/architecture_rules.md) を参照してください。
 
 復号に必要なGCP設定は、以下の環境変数、または`app_config.json`で設定された値から自動的に取得されます。
 
@@ -209,10 +238,17 @@ services:
 
 ---
 
-### `.clinerules` ファイルの取得方法
+### 他プロジェクトでも再利用しやすい構成
 
-本リポジトリで一元管理している `.clinerules` ファイルは、以下のコマンドで取得できます。
+このリポジトリでは、実装本体だけでなく、設計書・ルール文書・Copilot 向けの指示ファイルを一緒に管理しています。これらは、別の Python プロジェクトで同じような構成を作る際の参考実装やひな型として利用できます。
 
-```bash
-curl.exe -L -o .clinerules https://raw.githubusercontent.com/kaioman/libcore-hng/main/.clinerules
-```
+特に、以下のファイル群は再利用を意識した構成です。
+
+- [docs/architecture.md](docs/architecture.md)
+- [docs/business_rules.md](docs/business_rules.md)
+- [docs/architecture_rules.md](docs/architecture_rules.md)
+- [docs/coding_rules.md](docs/coding_rules.md)
+- [docs/directory_rules.md](docs/directory_rules.md)
+- [docs/naming_rules.md](docs/naming_rules.md)
+- [docs/testing_rules.md](docs/testing_rules.md)
+- [.github/copilot-instructions.md](.github/copilot-instructions.md)
