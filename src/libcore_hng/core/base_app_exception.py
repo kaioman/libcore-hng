@@ -47,9 +47,6 @@ class AppBaseException(Exception):
             self._exc_traceback = None
             
         self._exc_uuid = str(uuid.uuid4())
-
-        # ログ出力
-        self.log()
         
     @property
     def exc_type(self):
@@ -116,3 +113,5 @@ class AppBaseException(Exception):
                 app_logger.error(f"Exception [{self._exc_uuid}]: Message: {self._exc_value}")
             else:
                 app_logger.error(f"Exception [{self._exc_uuid}]: No exception captured.")
+
+        return self
