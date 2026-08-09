@@ -1,5 +1,5 @@
 from libcore_hng.utils.app_core import AppInitializer
-from test_013_config import DerivedConfig
+from tests._sandbox.test_013_config import DerivedConfig
 
 class DerivedAppInitializer(AppInitializer[DerivedConfig]):
     """

@@ -1,4 +1,4 @@
-import test_022_app_init as app
+import tests._sandbox.test_022_app_init as app
 
 # アプリ初期化
 app.init_app(
