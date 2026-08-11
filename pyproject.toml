@@ -22,6 +22,12 @@ dependencies = [
     "PyJWT"
 ]
 
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-order",
+]
+
 [project.scripts]
 decrypt-to-encrypt = "libcore_hng.cli.decrypt_to_encrypt:main"
 
@@ -30,6 +36,11 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::pytest.PytestAssertRewriteWarning",
+]
 
 [project.urls]
 Homepage = "https://github.com/kaioman/libcore-hng"
