@@ -1,4 +1,4 @@
-from custom_app_init.custom_app_init_enc import config
+from custom_app_init.custom_app_init_enc_no_gcp import config
 
 class TestSetupConfiguration:
 
