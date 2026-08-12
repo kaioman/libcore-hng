@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import jwt
 import requests
@@ -57,7 +58,10 @@ def _generate_subject_token(
     }
 
     headers = {"kid": kid}
-    return jwt.encode(payload, private_key_pem, algorithm="RS256", headers=headers)
+    subject_token = jwt.encode(payload, private_key_pem, algorithm="RS256", headers=headers)
+
+    # subject_tokenを返す
+    return subject_token
 
 def _get_secret_with_wif(
     secret_id: str, 
@@ -142,6 +146,31 @@ def _get_secret_with_wif(
     except Exception as e:
         raise CryptoException(f"Workload Identity Federation経由でのSecret Managerからの鍵取得に失敗しました: {e}")
 
+def _write_subject_token_from_config(subject_token: str) -> None:
+    """
+    GOOGLE_APPLICATION_CREDENTIALS(wif-config.json)から
+    credencials_source.file のパスを取り出し、subject_token を出力する
+    """
+    gac_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if not gac_path or not os.path.exists(gac_path):
+        return
+
+    try:
+        with open(gac_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+
+        token_file_str = config.get("credential_source", {}).get("file")
+        if not token_file_str:
+            return
+
+        token_path = Path(token_file_str)
+        token_path.parent.mkdir(parents=True, exist_ok=True)
+        token_path.write_text(subject_token, encoding="utf-8")
+
+    except Exception as e:
+        print(f"トークンの出力に失敗しました: {e}")
+        raise
+
 def _get_gcp_secret_key(gcp_config: GcpConfig) -> Optional[bytes]:
     """
     GCP Secret Managerから復号鍵を取得する。Workload Identity Federationが設定されている場合はそちらを優先する。
@@ -156,24 +185,47 @@ def _get_gcp_secret_key(gcp_config: GcpConfig) -> Optional[bytes]:
     CryptoException
         GCP Secret Managerからの鍵取得に失敗した場合
     """
-    if gcp_config.wif_enabled:
+
+    # 1. 環境変数または gcp_configから WIFパラメーターを取得
+    project_number = gcp_config.project_number or os.environ.get("GCP_PROJECT_NUMBER")
+    pool_id = gcp_config.pool_id or os.environ.get("GCP_WIF_POOL_ID")
+    provider_id = gcp_config.provider_id or os.environ.get("GCP_WIF_PROVIDER_ID")
+    issuer = gcp_config.issuer or os.environ.get("GCP_WIF_ISSUER")
+    kid = gcp_config.kid or os.environ.get("GCP_WIF_KID")
+    # 秘密鍵のパス(環境変数優先、無ければデフォルトパス)
+    private_key_path = os.environ.get(
+        "WIF_PRIVATE_KEY_PATH",
+        os.path.expanduser("~/.ssh/uw_private_key.pem")
+    )
+
+    # 2. WIF パラメーターと秘密鍵が揃っていれば、id_token(subject_token)を出力
+    if all([project_number, pool_id, provider_id, issuer, kid, private_key_path]):
+        if os.path.exists(private_key_path):
+            subject_token = _generate_subject_token(
+                private_key_path,
+                issuer,
+                project_number,
+                pool_id,
+                provider_id,
+                kid
+            )
+
+            # GOOGLE_APPLICATION_CREDENTIALSが指すWIF設定ファイルが持つ id_token のパスへ動的に出力
+            _write_subject_token_from_config(subject_token)
+
+    # 3. カスタム HTTP通信フローを使う場合
+    if gcp_config.use_custom_wif_flow:
         # Workload Identity Federation が有効な場合
-        project_number = gcp_config.project_number
-        pool_id = gcp_config.pool_id
-        provider_id = gcp_config.provider_id
         service_account_email = gcp_config.service_account_email
-        issuer = gcp_config.issuer
-        kid = gcp_config.kid
         sts_url = gcp_config.sts_url
         sts_grant_type = gcp_config.sts_grant_type
         sts_requested_token_type = gcp_config.sts_requested_token_type
         sts_scope = gcp_config.sts_scope
         sts_subject_token_type = gcp_config.sts_subject_token_type
         iam_credentials_url_base = gcp_config.iam_credentials_url_base
-        private_key_path = os.environ.get("WIF_PRIVATE_KEY_PATH", os.path.expanduser("~/.ssh/uw_private_key.pem")) # 環境変数優先、なければデフォルトパス
         secret_id = f"{gcp_config.secret_name}-{gcp_config.app_env}"
 
-        if all([project_number, pool_id, provider_id, service_account_email, issuer, private_key_path, secret_id]):
+        if service_account_email and secret_id:
             return _get_secret_with_wif(
                 secret_id, 
                 project_number, 
@@ -195,7 +247,7 @@ def _get_gcp_secret_key(gcp_config: GcpConfig) -> Optional[bytes]:
             # 循環参照を避けるため関数内でインポート
             from libcore_hng.utils.app_logger import app_logger
             app_logger.warning("Workload Identity Federation の設定が不完全です。環境変数またはapp_config.jsonを確認してください。")
-
+        
     # 環境変数または通常のGCP認証で取得
     project_id = gcp_config.project_id if gcp_config.project_id else os.environ.get("GCP_PROJECT_ID")
     secret_name_from_config = gcp_config.secret_name if gcp_config.secret_name else os.environ.get("GCP_SECRET_NAME")

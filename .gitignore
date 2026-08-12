@@ -4,3 +4,6 @@ libcore_hng.egg-info
 logs
 auth
 configs/gcp_config.json
+.env
+.pytest_cache
+credentials/wif-config.json
