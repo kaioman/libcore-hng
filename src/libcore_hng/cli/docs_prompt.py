@@ -89,6 +89,7 @@ def build_docs_generation_prompt(inputs: dict[str, list[Path]], output_dir: Path
     )
     # 指示プロンプトファイル出力先
     output_dir_text = str(output_dir.resolve())
+    index_output_dir_text = str((output_dir.parent).resolve())
 
     # ドキュメント生成指示プロンプトを返す
     return f"""GitHub Copilot として、このリポジトリを対象に作業してください。
@@ -115,7 +116,8 @@ def build_docs_generation_prompt(inputs: dict[str, list[Path]], output_dir: Path
 - 不整合があれば、設計変更の必要性を明記してください
 - 既存ドキュメントに追記できる最小差分でまとめてください
 - 本リポジトリ固有のモジュール名に縛られず、汎用的な責務として整理してください
-- 生成した Markdown 文書は、次のディレクトリに保存してください: {output_dir_text}
+- 生成した Markdown 文書(architecture.mdなど)は、次のディレクトリに保存してください: {output_dir_text}
+- ただし、`index.md` は docs 配下の入り口ページとして扱い、保存先は {index_output_dir_text} の直下にしてください
 - 生成対象のファイルはまだ存在しない場合があるため、既存の実装・設計文書をもとに新規作成してください。
 - `index.md` は docs の入口ページとして生成し、生成対象の設計書一覧と参照順を案内する目次ページにしてください。
 - overview.md を必ず生成してください。
@@ -184,14 +186,20 @@ def parse_args(argv=None) -> argparse.Namespace:
     parser.add_argument(
         "--project-root",
         type=Path,
-        default=Path("docs/reference"),
+        default=None,
         help="対象プロジェクトのルートパス。未指定時はカレントディレクトリをルートパスを使用する"
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
+        default=Path("docs/reference"),
+        help="生成される設計ドキュメントの保存先ディレクトリ",
+    )
+    parser.add_argument(
+        "--prompt-output-dir",
+        type=Path,
         default=Path("docs/prompts"),
-        help="生成用 prompt の出力先ディレクトリ",
+        help="生成用 prompt ファイルの保存先ディレクトリ"
     )
     return parser.parse_args(argv)
 
@@ -202,13 +210,15 @@ def main(argv=None) -> None:
     args = parse_args(argv)
 
     project_root = resolve_project_root(args.project_root)
-    output_dir = project_root / args.output_dir
+    docs_output_dir = project_root / args.output_dir
+    prompt_output_dir = project_root / args.prompt_output_dir
 
-    inputs = collect_project_inputs(args.project_root)
-    prompt = build_docs_generation_prompt(inputs, output_dir)
-    result = write_prompt_to_file(prompt, output_dir)
+    inputs = collect_project_inputs(project_root)
+    prompt = build_docs_generation_prompt(inputs, docs_output_dir)
+    result = write_prompt_to_file(prompt, prompt_output_dir)
 
     print(f"prompt を {result['prompt']} に保存しました")
+    print(f"生成ドキュメントの保存先: {docs_output_dir}")
     print()
     print(prompt)
 
