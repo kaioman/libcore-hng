@@ -3,13 +3,27 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-def collect_project_inputs(project_root: Path) -> dict[str, list[Path]]:
+def resolve_project_root(project_root: str | Path | None) -> Path:
+    """
+    リポジトリルートを安定して解決する
+
+    Parameters
+    ----------
+    project_root : str | Path | None
+        明示指定されたプロジェクトルート
+        未指定時はカレントディレクトリをプロジェクトルートとする
+    """
+    if project_root is not None:
+        return Path(project_root).resolve()
+    return Path.cwd().resolve()
+
+def collect_project_inputs(project_root: str | Path | None) -> dict[str, list[Path]]:
     """
     プロジェクトの docs と src のファイルを収集する
 
     Parameters
     ----------
-    project_root : str
+    project_root : str | Path | None
         プロジェクトルートパス
 
     Returns
@@ -19,10 +33,20 @@ def collect_project_inputs(project_root: Path) -> dict[str, list[Path]]:
         docsフォルダ、srcフォルダ別に保持する
     """
 
+    # ルートパスを取得する
+    base_root = Path(project_root).resolve() if project_root is not None else Path.cwd().resolve()
+
     # docsフォルダルート
-    docs_root = project_root / "docs"
+    docs_root = base_root / "docs"
     # srcフォルダルート
-    src_root = project_root / "src"
+    src_root = base_root / "src"
+
+    # docsルートが存在しない場合
+    if not docs_root.exists():
+        return {"docs": [], "src": []}
+    # docsルートは存在、srcルートが存在しない場合
+    if not src_root.exists():
+        return {"docs": sorted(docs_root.rglob("*.md"))}
 
     # docsフォルダにあるmdファイルパスを取得
     docs_files = sorted(docs_root.rglob("*.md"))
@@ -91,7 +115,7 @@ def build_docs_generation_prompt(inputs: dict[str, list[Path]], output_dir: Path
 - 不整合があれば、設計変更の必要性を明記してください
 - 既存ドキュメントに追記できる最小差分でまとめてください
 - 本リポジトリ固有のモジュール名に縛られず、汎用的な責務として整理してください
-- 生成した Markdown 文書は、次のディレクトリに保存してください: {output_dir_text}/reference
+- 生成した Markdown 文書は、次のディレクトリに保存してください: {output_dir_text}
 - 生成対象のファイルはまだ存在しない場合があるため、既存の実装・設計文書をもとに新規作成してください。
 - `index.md` は docs の入口ページとして生成し、生成対象の設計書一覧と参照順を案内する目次ページにしてください。
 - overview.md を必ず生成してください。
@@ -150,7 +174,7 @@ def write_prompt_to_file(prompt: str, output_dir: Path) -> dict[str, Path]:
     output_path.write_text(prompt,encoding="utf-8")
     return { "prompt": output_path }
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv=None) -> argparse.Namespace:
     """
     コマンドライン引数を解析する
     """
@@ -158,27 +182,37 @@ def parse_args() -> argparse.Namespace:
         description="プロジェクト分析に基づいて設計ドキュメント生成用 prompt を出力する"
     )
     parser.add_argument(
-        "--output-dir",
+        "--project-root",
         type=Path,
         default=Path("docs/reference"),
+        help="対象プロジェクトのルートパス。未指定時はカレントディレクトリをルートパスを使用する"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("docs/prompts"),
         help="生成用 prompt の出力先ディレクトリ",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
-def main() -> None:
+def main(argv=None) -> None:
     """
     メイン関数
     """
-    args = parse_args()
-    docs_root = Path(".")
+    args = parse_args(argv)
 
-    inputs = collect_project_inputs(docs_root)
-    prompt = build_docs_generation_prompt(inputs, docs_root / args.output_dir)
-    result = write_prompt_to_file(prompt, args.output_dir)
+    project_root = resolve_project_root(args.project_root)
+    output_dir = project_root / args.output_dir
+
+    inputs = collect_project_inputs(args.project_root)
+    prompt = build_docs_generation_prompt(inputs, output_dir)
+    result = write_prompt_to_file(prompt, output_dir)
 
     print(f"prompt を {result['prompt']} に保存しました")
     print()
     print(prompt)
 
+    return 0
+
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
