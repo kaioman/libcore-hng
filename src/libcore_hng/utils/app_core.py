@@ -1,7 +1,7 @@
 import libcore_hng.core.base_config as bcfg
 import libcore_hng.utils.app_logger as app_logger
 import libcore_hng.configs.gcp as app_gcp
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, cast
 
 T = TypeVar("T", bound=bcfg.BaseConfig)
 
@@ -13,7 +13,7 @@ class AppInitializer(Generic[T]):
     - ロガー設定
     """
 
-    def __init__(self, config_cls: type[T], base_file: str = __file__, *config_file: str):
+    def __init__(self, config_cls: type[T] = bcfg.BaseConfig, base_file: str = __file__, *config_file: str):
         """
         コンストラクタ
 
@@ -33,10 +33,6 @@ class AppInitializer(Generic[T]):
         BaseConfig
             ロードされた設定インスタンス
         """
-
-        # デフォルト値補完
-        if not config_file:
-            config_file = ("app_config.json")
         
         # 共通設定クラスインスタンス生成
         self.config: T = config_cls.load_config(base_file, *config_file)
@@ -47,10 +43,23 @@ class AppInitializer(Generic[T]):
         # GCP設定をグローバル変数に保存
         app_gcp.gcp_config = self.config.gcp
         
-core: AppInitializer[T] | None = None
+core: AppInitializer[bcfg.BaseConfig] | None = None
 """ アプリケーション初期化済みインスタンスを保持するグローバル変数 """
 
-def init_app(config_cls: type[T], base_file: str = __file__, *config_file: str) -> AppInitializer[T]:
+def get_config(_: type[T]) -> T:
+    """
+    設定クラスのインスタンスを取得する関数
+
+    Returns
+    -------
+    CONFIG_CLS
+        設定クラスのインスタンス
+    """
+    if core is None:
+        raise RuntimeError("アプリケーションが初期化されていません。init_app() を先に呼び出してください。")
+    return cast(T, core.config)
+
+def init_app(config_cls: type[T] = bcfg.BaseConfig, base_file: str = __file__, *config_file: str) -> AppInitializer[bcfg.BaseConfig]:
     """
     アプリケーションの初期化処理を一度だけ実行する関数
 
@@ -77,5 +86,6 @@ def init_app(config_cls: type[T], base_file: str = __file__, *config_file: str) 
     """
 
     global core
-    core = AppInitializer(config_cls, base_file, *config_file)
-    return core
+    initializer = AppInitializer(config_cls, base_file, *config_file)
+    core = cast(AppInitializer[T], initializer)
+    return initializer

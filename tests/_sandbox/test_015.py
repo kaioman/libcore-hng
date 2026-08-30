@@ -1,4 +1,4 @@
-import test_013_appinit as app
+import tests._sandbox.test_013_appinit as app
 import libcore_hng.utils.app_logger as app_logger
 
 # アプリ初期化

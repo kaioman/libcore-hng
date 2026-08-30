@@ -1,5 +1,5 @@
-import test_013_sub as t013
-import test_013_appinit as app
+import tests._sandbox.test_013_sub as t013
+import tests._sandbox.test_013_appinit as app
 
 # アプリ初期化
 app.init_app(__file__, "app_config.json", "app_config_override.json")

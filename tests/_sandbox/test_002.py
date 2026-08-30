@@ -1,6 +1,6 @@
-import test_002_config
 import libcore_hng.utils.app_logger as app_logger
-import test_002_sub
+import test_002_config as test_002_config
+import test_002_sub as test_002_sub
 
 def test_load_config():
     test_002_config.cfg = test_002_config.DerivedConfig.load_config(

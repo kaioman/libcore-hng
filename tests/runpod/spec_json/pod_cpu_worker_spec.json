@@ -1,0 +1,9 @@
+{
+    "name": "personyx_runpod_environment",
+    "templateId": "n1mt67rpf4",
+    "computeType": "CPU",
+    "networkVolumeId": "ztkp3vnlzd",
+    "volumeMountPath": "/workspace",
+    "vcpuCount": 4,
+    "containerDiskInGb": 1
+}

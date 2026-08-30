@@ -15,9 +15,12 @@ class GcpConfig(BaseConfigModel):
     """ Google Cloud Secret Managerのシークレット名 """
 
     # Workload Identity Federation (WIF) 関連の設定
-    wif_enabled: bool = Field(default=False, description="Workload Identity Federation を有効にするかどうか")
+    wif_enabled: bool = Field(default=False, description="Workload Identity Federation を有効にするかどうか(廃止予定)")
     """ Workload Identity Federation の有効化フラグ """
-    
+
+    use_custom_wif_flow: bool = Field(default=False, description="カスタムのWIF交換処理を行かどうか")
+    """ カスタムのWIF交換処理を行う """
+
     project_number: str = Field(default="", description="Workload Identity Pool が属するプロジェクト番号")
     """ Workload Identity Pool が属するプロジェクト番号 """
     

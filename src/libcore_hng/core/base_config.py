@@ -63,11 +63,19 @@ class BaseConfig(BaseConfigModel):
 
         # 設定ファイルを読み込んでマージする
         merged: Dict[str, Any] = {}
-        loaded_config_files = [] # 正常に読み込まれた設定ファイル名を保持
+        loaded_config_files: list[str] = []  # 正常に読み込まれた設定ファイル名を保持
+
+        # file_names が指定されている場合だけ、そのファイルを対象にする
+        if file_names:
+            config_paths = [config_dir / file_name for file_name in file_names]
+        else:
+            discover_json_paths = sorted(config_dir.glob("*.json"))
+            discover_enc_paths = sorted(config_dir.glob("*.enc"))
+            config_paths = [*discover_json_paths, *discover_enc_paths]
 
         # 統合された設定ファイルを読み込む
-        for file_name in file_names:
-            config_path = config_dir / file_name
+        for config_path in config_paths:
+            file_name = config_path.name
             if not config_path.exists():
                 # ファイルが存在しない場合はエラーログを出力し、例外を発生させる
                 from libcore_hng.exceptions import ConfigurationException
@@ -80,7 +88,7 @@ class BaseConfig(BaseConfigModel):
                     "logging": {
                         "logfile_name": "libcore-hng.log",
                         "logfile_name_suffix": 0,
-                        "logfolder_name": "./log",
+                        "logfolder_name": "./logs",
                         "logformat": "%(levelname)-7s : %(asctime)s : %(message)s",
                         "loglevel": 20,
                         "log_prefix_format": "[ {} {} ]",
@@ -101,7 +109,7 @@ class BaseConfig(BaseConfigModel):
                 # app_config.jsonが存在する場合は内容を読み込む
                 app_config_content = f"ファイルが存在しません。以下の内容で作成してください。\n```json\n{app_config_sample}\n```"
 
-                files_str =  ' '.join(loaded_config_files) if loaded_config_files else 'なし'
+                files_str = ' '.join(loaded_config_files) if loaded_config_files else 'なし'
                 error_message = (
                     f"設定ファイル `{file_name}` が見つかりません。\n"
                     f"現在の設定ディレクトリ: `{config_dir}`\n"
@@ -117,17 +125,22 @@ class BaseConfig(BaseConfigModel):
                 
                 # GCP設定を辞書として渡す
                 gcp_config_dict = merged.get("gcp", {})
-                
-                # ファイルを復号化
-                raw_bytes = load_secret_with_gcp_config(config_path, gcp_config_dict)
-                data = json.loads(raw_bytes.decode("utf-8"))
-                merged.update(data)
+
+                try:
+                    # ファイルを復号化
+                    raw_bytes = load_secret_with_gcp_config(config_path, gcp_config_dict)
+                    data = json.loads(raw_bytes.decode("utf-8"))
+                    _deep_merge_dict(merged, data)
+                except Exception as e:
+                    print(f"設定ファイル `{file_name}` の復号に失敗したためスキップします。詳細: {e.exc_value}")
+                    continue
             else:
                 # --- 通常のJSONファイルの場合 ---
                 with open(config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    merged.update(data)
-            loaded_config_files.append(file_name) # 正常に読み込まれたファイル名を追加
+                    _deep_merge_dict(merged, data)
+
+            loaded_config_files.append(file_name)  # 正常に読み込まれたファイル名を追加
         
         instance = cls(**merged)
         
@@ -136,6 +149,13 @@ class BaseConfig(BaseConfigModel):
         
         # 自クラスインスタンスを共通設定クラスインスタンスとして返す
         return instance
+
+def _deep_merge_dict(base: dict[str, Any], incomiing: dict[str, Any]) -> None:
+    for key, value in incomiing.items():
+        if (key in base and isinstance(base[key], dict) and isinstance(value, dict)):
+            _deep_merge_dict(base[key], value)
+        else:
+            base[key] = value
 
 cfg: BaseConfig | None = None
 """ 共通設定クラスインスタンス """
