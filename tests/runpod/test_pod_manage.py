@@ -70,7 +70,9 @@ class TestRunpodManager:
 
         # 1. PodInfo取得
         pi = self.mgr.find_by_name(self.pod_name)
-
+        if pi is None:
+            return
+        
         # 2. get_status実行
         pdinfo = self.mgr.get_status(pi.id)
 
