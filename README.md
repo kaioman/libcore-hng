@@ -30,6 +30,9 @@ libcore-hng は、設定管理・ロギング・例外処理・暗号化・フ�
 - [docs/directory_rules.md](docs/directory_rules.md)
 - [docs/naming_rules.md](docs/naming_rules.md)
 - [docs/testing_rules.md](docs/testing_rules.md)
+- [docs/utils_overview.md](docs/utils_overview.md)
+
+- 詳細な設計・ルール・テスト方針の入口は [docs/index.md](docs/index.md) を参照してください。
 
 ## アプリ初期処理サンプル
 
