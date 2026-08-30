@@ -195,7 +195,7 @@ def _get_gcp_secret_key(gcp_config: GcpConfig) -> Optional[bytes]:
     # 秘密鍵のパス(環境変数優先、無ければデフォルトパス)
     private_key_path = os.environ.get(
         "WIF_PRIVATE_KEY_PATH",
-        os.path.expanduser("~/.ssh/uw_private_key.pem")
+        os.path.expanduser("~/.config/gcp/secret/dev/uw_private_key.pem")
     )
 
     # 2. WIF パラメーターと秘密鍵が揃っていれば、id_token(subject_token)を出力
