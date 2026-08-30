@@ -88,8 +88,15 @@ def test_docs_prompt_generates_prompt_for_repo_root(tmp_path: Path) -> None:
         )
     )
 
-    output_dir = project_copy / "docs" / "prompts"
-    prompt_path = output_dir / "docs_generation_prompt.md"
+    #output_dir = project_copy / "docs" / "prompts"
+    #prompt_path = output_dir / "docs_generation_prompt.md"
+    
+    # プロンプト生成ファイルの出力先ディレクトリ
+    prompt_output_dir = project_copy / "docs" / "prompts"
+    # 生成ドキュメントの出力先ディレクトリ
+    docs_output_dir = project_copy / "docs" / "reference"
+    # プロンプト生成ファイルのパス
+    prompt_path = prompt_output_dir / "docs_generation_prompt.md"
 
     env = os.environ.copy()
     src_path = str(project_copy / "src")
@@ -106,6 +113,8 @@ def test_docs_prompt_generates_prompt_for_repo_root(tmp_path: Path) -> None:
             "--project-root", 
             str(project_copy),
             "--output-dir",
+            "docs/reference",
+            "--prompt-output-dir",
             "docs/prompts",
         ],
         cwd=str(project_copy),
@@ -121,5 +130,6 @@ def test_docs_prompt_generates_prompt_for_repo_root(tmp_path: Path) -> None:
     assert "GitHub Copilot として" in prompt_text
     assert "生成対象:" in prompt_text
     assert "overview.md" in prompt_text
+    assert str(docs_output_dir.resolve()) in prompt_text
     assert "docs-" in prompt_text
     assert "src-" in prompt_text
