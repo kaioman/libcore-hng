@@ -2,16 +2,20 @@ import os
 import sys
 import shutil
 import subprocess
+import pytest
 from pathlib import Path
 from libcore_hng.cli.docs_prompt import (
     build_docs_generation_prompt, 
-    collect_project_inputs, 
+    build_docs_update_prompt,
+    collect_project_inputs_with_content, 
     write_prompt_to_file
 )
+from libcore_hng.models.doc_types import FileContent
 
-def test_collect_project_inputs_returns_expected_files(tmp_path: Path) -> None:
+def test_collect_project_inputs_with_content_returns_expected_files_in_generate_mode(tmp_path: Path) -> None:
     """
-    doc と srcの構成を持つ一時ディレクトリから、対象ファイルを正しく収集できるか確認する
+    generateモードで doc と srcのファイルが正しく収集されることを確認する
+    対象ファイルをパスのみで返すことを確認する
     """
     base_dir = tmp_path / "debug_generated-docs"
     docs_dir = base_dir / "docs"
@@ -24,11 +28,128 @@ def test_collect_project_inputs_returns_expected_files(tmp_path: Path) -> None:
     architecture_md.write_text("# architecture", encoding="utf-8")
     sample_src_py.write_text("VALUE = 1\n", encoding="utf-8")
 
-    result = collect_project_inputs(base_dir)
-    print(result)
+    result = collect_project_inputs_with_content(base_dir, mode="generate")
 
-    assert [p.name for p in result["docs"]] == ["architecture.md"]
-    assert [p.name for p in result["src"]] == ["sample.py"]
+    assert [f["path"].name for f in result["docs"]] == ["architecture.md"]
+    assert [f["path"].name for f in result["src"]] == ["sample.py"]
+    assert result["docs"][0]["content"] == ""
+    assert result["src"][0]["content"] == "VALUE = 1\n"
+
+def test_collect_project_inputs_with_content_reads_content_in_update_mode(tmp_path: Path) -> None:
+    """
+    updateモードで doc と srcのファイルの内容が正しく読み込まれることを確認する
+    """
+    base_dir = tmp_path / "debug_generated-docs"
+    docs_dir = base_dir / "docs"
+    src_dir = base_dir / "src"
+    docs_dir.mkdir(parents=True)
+    src_dir.mkdir(parents=True)
+
+    architecture_md = docs_dir / "architecture.md"
+    sample_src_py = src_dir / "sample.py"
+    architecture_md.write_text("# architecture", encoding="utf-8")
+    sample_src_py.write_text("VALUE = 1\n", encoding="utf-8")
+
+    result = collect_project_inputs_with_content(base_dir, mode="update")
+
+    assert [f["path"].name for f in result["docs"]] == ["architecture.md"]
+    assert [f["path"].name for f in result["src"]] == ["sample.py"]
+    assert result["docs"][0]["content"] == "# architecture"
+    assert result["src"][0]["content"] == "VALUE = 1\n"
+
+def test_collect_project_inputs_excludes_prompt_directory(tmp_path: Path) -> None:
+    """
+    docs/prompts 配下のMarkdownファイルが収集対象外になることを確認する
+    """
+    base_dir = tmp_path / "project"
+    docs_dir = base_dir / "docs"
+    src_dir = base_dir / "src"
+    prompts_dir = docs_dir / "prompts"
+    docs_dir.mkdir(parents=True)
+    src_dir.mkdir(parents=True)
+    prompts_dir.mkdir(parents=True)
+
+    included_doc = docs_dir / "architecture.md"
+    prompt_file = prompts_dir / "docs_generate_prompt.md"
+    included_src = src_dir / "sample.py"
+    included_doc.write_text("# architecture", encoding="utf-8")
+    prompt_file.write_text("# prompt", encoding="utf-8")
+    included_src.write_text("VALUE = 1\n", encoding="utf-8")
+
+    # collect_project_inputs_with_contentを呼び出す
+    result = collect_project_inputs_with_content(base_dir, mode="generate")
+
+    assert [f["path"].name for f in result["docs"]] == ["architecture.md"]
+    assert all(f["path"] != prompt_file for f in result["docs"])
+
+def test_collect_project_inputs_excludes_custom_directory(tmp_path: Path) -> None:
+    """
+    指定されたディレクトリ配下のMarkdownファイルが収集対象外になることを確認する
+    """
+    base_dir = tmp_path / "project"
+    docs_dir = base_dir / "docs"
+    excluded_dir = docs_dir / "prompts"
+    docs_dir.mkdir(parents=True)
+    excluded_dir.mkdir(parents=True)
+
+    included_doc = docs_dir / "architecture.md"
+    excluded_doc = excluded_dir / "generated.md"
+    included_doc.write_text("# architecture", encoding="utf-8")
+    excluded_doc.write_text("# generated", encoding="utf-8")
+
+    # collect_project_inputs_with_contentを呼び出す
+    result = collect_project_inputs_with_content(
+        base_dir, 
+        mode="generate",
+        excluded_dirs=[excluded_dir],
+    )
+
+    assert [f["path"].name for f in result["docs"]] == ["architecture.md"]
+
+def test_collect_project_inputs_excludes_files_that_fail_to_read(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+    """
+    読み込みに失敗したdocsとsrcのファイルが収集対象外になることを確認する
+    """
+    base_dir = tmp_path / "project"
+    docs_dir = base_dir / "docs"
+    src_dir = base_dir / "src"
+    docs_dir.mkdir(parents=True)
+    src_dir.mkdir(parents=True)
+
+    unreadable_doc = docs_dir / "unreadable.md"
+    readable_doc = docs_dir / "readable.md"
+    unreadable_src = src_dir / "unreadable.py"
+    readable_src = src_dir / "readable.py"
+    unreadable_doc.write_text("# unreadable", encoding="utf-8")
+    readable_doc.write_text("# readable", encoding="utf-8")
+    unreadable_src.write_text("VALUE = 0\n", encoding="utf-8")
+    readable_src.write_text("VALUE = 1\n", encoding="utf-8")
+
+    original_read_text = Path.read_text
+
+    def read_text_with_failure(path: Path, *args, **kwargs) -> str:
+        if path in {unreadable_doc, unreadable_src}:
+            raise OSError("test read failure")
+        return original_read_text(path, *args, **kwargs)
+
+    # 読み込みに失敗するようにモック
+    monkeypatch.setattr(Path, "read_text", read_text_with_failure)
+
+    # collect_project_inputs_with_contentを呼び出す
+    result = collect_project_inputs_with_content(base_dir, mode="update")
+
+    assert [f["path"].name for f in result["docs"]] == ["readable.md"]
+    assert [f["path"].name for f in result["src"]] == ["readable.py"]
+
+def test_collect_project_inputs_rejects_invalid_mode(tmp_path: Path) -> None:
+    """
+    無効なモードが指定された場合に例外が発生することを確認する
+    """
+    with pytest.raises(ValueError, match="generate.*update"):
+        collect_project_inputs_with_content(tmp_path, mode="invalid")
 
 def test_build_docs_generation_prompt_uses_output_dir_without_duplicate_reference(tmp_path: Path) -> None:
     """
@@ -46,13 +167,15 @@ def test_build_docs_generation_prompt_uses_output_dir_without_duplicate_referenc
     sample_src_py.write_text("VALUE = 1\n", encoding="utf-8")
 
     output_dir = base_dir / "docs" / "reference"
-    prompt = build_docs_generation_prompt(
-        {"docs": [architecture_md], "src": [sample_src_py]},
-        output_dir
-    )
+    inputs = {
+        "docs": [FileContent(path=architecture_md, content="# architecture")], 
+        "src": [FileContent(path=sample_src_py, content="VALUE = 1\n")]
+    }
+    prompt = build_docs_generation_prompt(inputs, output_dir)
 
     assert str(output_dir.resolve()) in prompt
     assert "/reference/reference" not in prompt
+    assert "【モード: 新規生成】" in prompt
 
 def test_write_prompt_to_file_creates_prompt_file(tmp_path: Path) -> None:
     """
@@ -62,11 +185,40 @@ def test_write_prompt_to_file_creates_prompt_file(tmp_path: Path) -> None:
     docs_dir = base_dir / "docs"
     docs_dir.mkdir(parents=True)
     output_dir = base_dir / "docs" / "reference"
-    result = write_prompt_to_file("prompt_body", output_dir)
+    result = write_prompt_to_file("prompt_body", output_dir, mode="generate")
 
     assert result["prompt"].exists()
-    assert result["prompt"].name == "docs_generation_prompt.md"
+    assert result["prompt"].name == "docs_generate_prompt.md"
     assert result["prompt"].read_text(encoding="utf-8") == "prompt_body"
+
+def test_build_docs_update_prompt_includes_existing_content(tmp_path: Path) -> None:
+    """
+    update モード用プロンプトが既存ドキュメント内容を含むことを確認する
+    """
+    base_dir = tmp_path / "debug_generated-docs"
+    docs_dir = base_dir / "docs"
+    src_dir = base_dir / "src"
+    docs_dir.mkdir(parents=True)
+    src_dir.mkdir(parents=True)
+
+    architecture_md = docs_dir / "architecture.md"
+    sample_src_py = src_dir / "sample.py"
+    doc_content = "# 既存のアーキテクチャ設計"
+    src_content = "def sample(): pass\n"
+    architecture_md.write_text(doc_content, encoding="utf-8")
+    sample_src_py.write_text(src_content, encoding="utf-8")
+
+    output_dir = base_dir / "docs" / "reference"
+    inputs = {
+        "docs": [FileContent(path=architecture_md, content=doc_content)], 
+        "src": [FileContent(path=sample_src_py, content=src_content)]
+    }
+    prompt = build_docs_update_prompt(inputs, output_dir)
+
+    assert "【モード: 既存ドキュメント更新】" in prompt
+    assert doc_content in prompt
+    assert "sample.py" in prompt
+    assert "差分のみ" in prompt
 
 def test_docs_prompt_generates_prompt_for_repo_root(tmp_path: Path) -> None:
     """
@@ -88,15 +240,12 @@ def test_docs_prompt_generates_prompt_for_repo_root(tmp_path: Path) -> None:
         )
     )
 
-    #output_dir = project_copy / "docs" / "prompts"
-    #prompt_path = output_dir / "docs_generation_prompt.md"
-    
     # プロンプト生成ファイルの出力先ディレクトリ
     prompt_output_dir = project_copy / "docs" / "prompts"
     # 生成ドキュメントの出力先ディレクトリ
     docs_output_dir = project_copy / "docs" / "reference"
     # プロンプト生成ファイルのパス
-    prompt_path = prompt_output_dir / "docs_generation_prompt.md"
+    prompt_path = prompt_output_dir / "docs_generate_prompt.md"
 
     env = os.environ.copy()
     src_path = str(project_copy / "src")
@@ -116,6 +265,8 @@ def test_docs_prompt_generates_prompt_for_repo_root(tmp_path: Path) -> None:
             "docs/reference",
             "--prompt-output-dir",
             "docs/prompts",
+            "--mode",
+            "generate",
         ],
         cwd=str(project_copy),
         env=env,
@@ -128,6 +279,7 @@ def test_docs_prompt_generates_prompt_for_repo_root(tmp_path: Path) -> None:
     prompt_text = prompt_path.read_text(encoding="utf-8")
 
     assert "GitHub Copilot として" in prompt_text
+    assert "【モード: 新規生成】" in prompt_text
     assert "生成対象:" in prompt_text
     assert "overview.md" in prompt_text
     assert str(docs_output_dir.resolve()) in prompt_text
