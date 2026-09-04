@@ -34,6 +34,62 @@ libcore-hng は、設定管理・ロギング・例外処理・暗号化・フ�
 
 - 詳細な設計・ルール・テスト方針の入口は [docs/index.md](docs/index.md) を参照してください。
 
+## CLI
+
+### ドキュメント生成用プロンプトの作成
+
+プロジェクトを分析し、設計ドキュメントを新規生成します。
+
+```bash
+python -m libcore_hng.docs_prompt \
+  -- mode generate \
+  -- project_root . \
+  -- output-dir docs/reference \
+  -- prompt-output-dir docs/prompts
+```
+
+生成されたプロンプトは `docs/prompts/docs_generate_prompt.md` に保存されます。
+
+### 既存ドキュメント更新用プロンプトの作成
+
+既存の設計ドキュメントとソースコードを照合し、差分更新するためのプロンプトを作成します。
+
+```bash
+python -m libcore_hng.docs_prompt \
+  -- mode update \
+  -- project_root . \
+  -- output-dir docs/reference \
+  -- prompt-output-dir docs/prompts
+```
+
+生成されたプロンプトは `docs/prompts/docs_update_prompt.md` に保存されます。
+
+`docs-prompt` コマンドをインストール済みの場合は、次の形式でも実行できます。
+
+```bash
+docs-prompt --mode generate
+docs-prompt --mode update
+```
+
+### CLIオプション
+
+| オプション | 説明 | デフォルト |
+| --- | --- | --- |
+| `--mode` | `generate` または `update` を指定します | `generate` |
+| `--project-root` | 対象プロジェクトのルートディレクトリを指定します | カレントディレクトリ |
+| `--output-dir` | 生成ドキュメントの保存先を指定します | `docs/reference` |
+| `--prompt-output-dir` | プロンプトの保存先を指定します | `docs/prompts` |
+
+### 暗号化設定ファイルの編集
+
+暗号化された `.enc` ファイルを復号し、メモ帳で編集した後に再暗号化します。
+
+```bash
+decrypt-to-encrypt configs/test-config.json.enc --secret-key <Fernetの秘密鍵>
+```
+
+秘密鍵はコマンド履歴やプロセス情報に残る可能性があるので取り扱いには注意してください
+
 ## アプリ初期処理サンプル
 
 このプロジェクトでは、`AppInitializer` を用いてアプリケーションの初期化処理を行います。
