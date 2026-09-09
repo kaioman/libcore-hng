@@ -405,6 +405,14 @@ def load_secret_with_gcp_config(file_path: Union[str, Path], gcp_config_dict: Di
     except CryptoException:
         # _get_key で発生した CryptoException はそのまま投げる
         raise
-    except (InvalidToken, Exception) as e:
+    except InvalidToken as e:
+        raise CryptoException(
+            "暗号化ファイルを復号できません。"
+            "APP_SECRET_KEY が異なるか、暗号化ファイルが破損している可能性があります。"
+        ) from e
+    except Exception as e:
         # サードパーティの例外やIOエラーをラップして再送出
-        raise CryptoException(e)
+        raise CryptoException(
+            f"暗号化ファイルの読み込みまたは復号に失敗しました。"
+            f"原因: {type(e).__name__}: {e!r}"
+        ) from e
