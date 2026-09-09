@@ -11,11 +11,11 @@
 
 ## 2. 根拠となるファイル
 
-- [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py)
+- [src/libcore_hng/core/base_config.py](../../src/libcore_hng/core/base_config.py)
   - `BaseConfig`, `load_config`, `project_root_path`
-- [src/libcore_hng/utils/app_core.py](src/libcore_hng/utils/app_core.py)
+- [src/libcore_hng/utils/app_core.py](../../src/libcore_hng/utils/app_core.py)
   - `AppInitializer`, `init_app`, `config_cls`
-- [src/libcore_hng/utils/file_renamer.py](src/libcore_hng/utils/file_renamer.py)
+- [src/libcore_hng/utils/file_renamer.py](../../src/libcore_hng/utils/file_renamer.py)
   - `_backup_file`, `rename_files`, `backup_directory`
 
 ## 3. 推奨事項

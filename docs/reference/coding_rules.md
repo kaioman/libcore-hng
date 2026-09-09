@@ -12,13 +12,13 @@
 
 ## 2. 根拠となるファイル
 
-- [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py)
+- [src/libcore_hng/core/base_config.py](../../src/libcore_hng/core/base_config.py)
   - 型注釈付きのクラスメソッド実装
-- [src/libcore_hng/core/base_app_exception.py](src/libcore_hng/core/base_app_exception.py)
+- [src/libcore_hng/core/base_app_exception.py](../../src/libcore_hng/core/base_app_exception.py)
   - 独自例外基底クラスの実装
-- [src/libcore_hng/utils/file_renamer.py](src/libcore_hng/utils/file_renamer.py)
+- [src/libcore_hng/utils/file_renamer.py](../../src/libcore_hng/utils/file_renamer.py)
   - 明示的な戻り値型と例外ハンドリング
-- [src/libcore_hng/utils/app_logger.py](src/libcore_hng/utils/app_logger.py)
+- [src/libcore_hng/utils/app_logger.py](../../src/libcore_hng/utils/app_logger.py)
   - ログ処理の共通化
 
 ## 3. 推奨事項

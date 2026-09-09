@@ -198,9 +198,9 @@ flowchart LR
 
 ### 9.2 実装上の判断条件
 
-- [src/libcore_hng/utils/file_renamer.py](src/libcore_hng/utils/file_renamer.py)
+- [src/libcore_hng/utils/file_renamer.py](../../src/libcore_hng/utils/file_renamer.py)
   - `on_conflict` が `error` / `skip` / `overwrite` のいずれかでない場合は例外
-- [src/libcore_hng/cli/decrypt_to_encrypt.py](src/libcore_hng/cli/decrypt_to_encrypt.py)
+- [src/libcore_hng/cli/decrypt_to_encrypt.py](../../src/libcore_hng/cli/decrypt_to_encrypt.py)
   - 入力ファイルが存在しない場合は処理終了
 
 ---

@@ -6,11 +6,11 @@
 
 ## 2. 根拠となるファイル
 
-- [tests/test_002.py](tests/test_002.py)
+- [tests/test_002.py](../../tests/test_002.py)
   - 設定ロードとログ設定の一連の流れを検証するサンプル
-- [tests/test_013_appinit.py](tests/test_013_appinit.py)
+- [tests/test_013_appinit.py](../../tests/test_013_appinit.py)
   - アプリ初期化クラスの拡張パターンを確認するテスト
-- [tests/test_002_sub.py](tests/test_002_sub.py)
+- [tests/test_002_sub.py](../../tests/test_002_sub.py)
   - サブモジュールから共有状態にアクセスする構成
 
 ## 3. 推奨事項

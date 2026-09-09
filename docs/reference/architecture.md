@@ -234,8 +234,8 @@ flowchart LR
 
 AI Agent がこのリポジトリを編集する際は、次の順序で理解すると効率的です。
 
-1. まず [src/libcore_hng/utils/app_core.py](src/libcore_hng/utils/app_core.py) で初期化フローを把握する
-2. 次に [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py) で設定ロードの流れを確認する
-3. 追加する機能がロギング・暗号化・ファイル処理に関わる場合は [src/libcore_hng/utils](src/libcore_hng/utils) を優先する
-4. 例外仕様を追加する場合は [src/libcore_hng/exceptions](src/libcore_hng/exceptions) に合わせる
-5. 設定項目を増やす場合は [src/libcore_hng/configs](src/libcore_hng/configs) と [configs](configs) の両方を更新する
+1. まず [src/libcore_hng/utils/app_core.py](../../src/libcore_hng/utils/app_core.py) で初期化フローを把握する
+2. 次に [src/libcore_hng/core/base_config.py](../../src/libcore_hng/core/base_config.py) で設定ロードの流れを確認する
+3. 追加する機能がロギング・暗号化・ファイル処理に関わる場合は [src/libcore_hng/utils](../../src/libcore_hng/utils) を優先する
+4. 例外仕様を追加する場合は [src/libcore_hng/exceptions](../../src/libcore_hng/exceptions) に合わせる
+5. 設定項目を増やす場合は [src/libcore_hng/configs](../../src/libcore_hng/configs) と [configs](../../configs) の両方を更新する
