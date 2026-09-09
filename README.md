@@ -41,11 +41,11 @@ libcore-hng は、設定管理・ロギング・例外処理・暗号化・フ�
 プロジェクトを分析し、設計ドキュメントを新規生成します。
 
 ```bash
-python -m libcore_hng.docs_prompt \
-  -- mode generate \
-  -- project_root . \
-  -- output-dir docs/reference \
-  -- prompt-output-dir docs/prompts
+python -m libcore_hng.cli.docs_prompt \
+  --mode generate \
+  --project-root . \
+  --output-dir docs/reference \
+  --prompt-output-dir docs/prompts
 ```
 
 生成されたプロンプトは `docs/prompts/docs_generate_prompt.md` に保存されます。
@@ -55,11 +55,11 @@ python -m libcore_hng.docs_prompt \
 既存の設計ドキュメントとソースコードを照合し、差分更新するためのプロンプトを作成します。
 
 ```bash
-python -m libcore_hng.docs_prompt \
-  -- mode update \
-  -- project_root . \
-  -- output-dir docs/reference \
-  -- prompt-output-dir docs/prompts
+python -m libcore_hng.cli.docs_prompt \
+  --mode update \
+  --project-root . \
+  --output-dir docs/reference \
+  --prompt-output-dir docs/prompts
 ```
 
 生成されたプロンプトは `docs/prompts/docs_update_prompt.md` に保存されます。
@@ -71,14 +71,38 @@ docs-prompt --mode generate
 docs-prompt --mode update
 ```
 
+src 以外のディレクトリをソースコードとして収集する場合は、`--source-dir` で探索対象を指定できます。複数のディレクトリを指定することもできます。
+
+```bash
+docs-prompt \
+  --mode update \
+  --source-dir app backend \
+  --source-ext .py .ts .tsx
+```
+
+`--source-ext` の拡張子は、先頭のドットを省略して指定可能です。
+
+```bash
+docs-prompt \
+  --mode update \
+  --source-dir app backend \
+  --source-ext py ts tsx
+```
+
+updateモードでは、既存ドキュメントと収集したソースコードの内容をプロンプトに含めます。プロンプトが過度に大きくならないように、ソースコードは1ファイルあたり20,000文字、ソースコード全体で200,000文字を上限として切り詰めます。上限を超えたファイルはプロンプト内に省略情報として記載されます。
+
 ### CLIオプション
 
 | オプション | 説明 | デフォルト |
 | --- | --- | --- |
 | `--mode` | `generate` または `update` を指定します | `generate` |
 | `--project-root` | 対象プロジェクトのルートディレクトリを指定します | カレントディレクトリ |
+| `--source-dir` | ソースコードを探索するディレクトリ、スペース区切りで複数指定できます | `src` |
+| `--source-ext` | 収集対象のファイル拡張子。スペース区切りで複数指定できます | `.py`, `.js`, `.jsx`, `.ts`, `.tsx`, `.java`, `.go`, `.cs`, `.html`, `.css` |
 | `--output-dir` | 生成ドキュメントの保存先を指定します | `docs/reference` |
 | `--prompt-output-dir` | プロンプトの保存先を指定します | `docs/prompts` |
+
+ソースコードの収集時は `docs/prompts` 、 `.git` 、 `__pycache__` 、 `.env` 、 `.venv` 、 `env` 、 `venv` 、 `node_modules` 、 `build` 、 `dist` 、 `tests` などのディレクトリは既定で除外されます。
 
 ### 暗号化設定ファイルの編集
 
