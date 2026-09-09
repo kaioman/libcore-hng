@@ -3,7 +3,67 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 from typing import Literal
-from libcore_hng.models.doc_types import FileContent, ProjectInputs, DocGaps
+from libcore_hng.models.doc_types import FileContent, ProjectInputs
+
+DEFAULT_SOURCE_EXTENSIONS = [
+    ".py",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".java",
+    ".go",
+    ".cs",
+    ".html",
+    ".css",
+]
+""" デフォルトの収集対象ファイル拡張子 """
+
+DEFAULT_EXCLUDED_DIRS = {
+    ".git",
+    "__pycache__",
+    ".env",
+    ".venv",
+    "env",
+    "venv",
+    "node_modules",
+    "build",
+    "dist",
+    "tests",
+}
+
+MAX_SOURCE_FILE_CHARS = 20_000
+""" 1ファイルたりのプロンプト入力上限文字数 """
+
+MAX_SOURCE_CONTENT_CHARS = 200_000
+""" ソースコード全体のプロンプト入力上限文字数 """
+
+def is_excluded_path(path: Path, excluded_roots: set[Path]) -> bool:
+    """
+    指定されたパスが除外対象か確認する
+
+    明示指定された除外パス配下、または既定の除外ディレクトリ名を
+    含むパスを除外する
+
+    Parameters
+    ----------
+    path : Path
+        除外対象か確認するパス
+    excluded_roots : set[Path]
+        明示指定された除外パス
+    """
+    resolved_path = path.resolve()
+
+    if any(
+        excluded_root in resolved_path.parents
+        for excluded_root in excluded_roots
+    ):
+        return True
+
+    return any(
+        parent.name in DEFAULT_EXCLUDED_DIRS
+        for parent in resolved_path.parents
+    )
 
 def resolve_project_root(project_root: str | Path | None) -> Path:
     """
@@ -22,10 +82,12 @@ def resolve_project_root(project_root: str | Path | None) -> Path:
 def collect_project_inputs_with_content(
         project_root: str | Path | None,
         mode: Literal["generate", "update"] = "generate",
+        source_dirs: list[str | Path] | None = None,
+        source_extensions: list[str] | None = None,
         excluded_dirs: list[str | Path] | None = None
     ) -> ProjectInputs:
     """
-    プロジェクトの docs と src のファイルを収集する
+    プロジェクトの docs と ソースファイルを収集する
 
     Parameters
     ----------
@@ -33,6 +95,12 @@ def collect_project_inputs_with_content(
         プロジェクトルートパス
     mode : Literal["generate", "update"], optional
         処理モード ("generate" または "update")
+    source_dirs : list[str | Path] | None
+        ソースコードを探索するディレクトリのリスト。
+        未指定時は `src` ディレクトリを使用する
+    source_extensions : list[str] | None
+        収集対象の拡張子リスト。
+        先頭のドットは省略可能
     excluded_dirs : list[str | Path] | None, optional
         除外するディレクトリのリスト
 
@@ -40,7 +108,7 @@ def collect_project_inputs_with_content(
     -------
     ProjectInputs
         参考ファイルの内容を保持するオブジェクト
-        docsフォルダ、srcフォルダ別に保持する
+        docsフォルダ、ソースフォルダ別に保持する
     """
 
     # ルートパスを取得する
@@ -54,17 +122,30 @@ def collect_project_inputs_with_content(
 
     # docsフォルダルート
     docs_root = base_root / "docs"
-    # srcフォルダルート
-    src_root = base_root / "src"
 
     # 除外ディレクトリの解決
     excluded_roots = {(docs_root / "prompts").resolve()}
     for excluded_dir in excluded_dirs or []:
-        excluded_path = Path(excluded_dir).resolve()
+        excluded_path = Path(excluded_dir)
         if not excluded_path.is_absolute():
             excluded_path = base_root / excluded_path
         excluded_roots.add(excluded_path.resolve())
-    
+
+    # ソースディレクトリの解決
+    source_roots = [
+        (
+            Path(source_dir)
+            if Path(source_dir).is_absolute() else base_root / source_dir
+        ).resolve()
+        for source_dir in (source_dirs or [base_root / "src"])
+    ]
+
+    # ソース拡張子の解決
+    normalized_extensions = {
+        extension.lower() if extension.startswith(".") else f".{extension.lower()}"
+        for extension in (source_extensions or DEFAULT_SOURCE_EXTENSIONS)
+    }
+
     # docs と src のファイルを収集するためのリストを初期化
     docs_files: list[FileContent] = []
     src_files: list[FileContent] = []
@@ -73,10 +154,7 @@ def collect_project_inputs_with_content(
     if docs_root.exists():
         for doc_path in sorted(docs_root.rglob("*.md")):
             # 除外ディレクトリに含まれる場合はスキップ
-            if any(
-                excluded_root in doc_path.resolve().parents 
-                for excluded_root in excluded_roots
-            ):
+            if is_excluded_path(doc_path, excluded_roots):
                 continue
             
             if mode == "update":
@@ -89,23 +167,28 @@ def collect_project_inputs_with_content(
             else:
                 docs_files.append(FileContent(path=doc_path, content=""))  # contentは空で収集
 
-    # src ファイル収集
-    if src_root.exists():
-        for src_path in sorted(src_root.rglob("*.py")):
-            # 除外ディレクトリに含まれる場合はスキップ
-            if any(
-                excluded_root in src_path.resolve().parents
-                for excluded_root in excluded_roots
-            ):
-                continue
+    # ソースファイル収集    
+    source_paths = {
+        source_path.resolve()
+        for source_root in source_roots
+        if source_root.exists()
+        for source_path in source_root.rglob('*')
+        if (
+            source_path.is_file() and
+            source_path.suffix.lower() in normalized_extensions and
+            not is_excluded_path(source_path, excluded_roots)
+        )
+    }
 
-            if src_path.is_file():
-                try:
-                    content = src_path.read_text(encoding="utf-8")
-                    src_files.append(FileContent(path=src_path, content=content))
-                except (OSError, UnicodeDecodeError):
-                    continue
-
+    for source_path in sorted(source_paths):
+        try:
+            content = ""
+            if mode == "update":
+                content = source_path.read_text(encoding="utf-8")
+            src_files.append(FileContent(path=source_path, content=content))
+        except (OSError, UnicodeDecodeError):
+            continue
+    
     # 取得結果を返す
     return {
         "docs": docs_files,
@@ -133,11 +216,12 @@ def build_docs_generation_prompt(inputs: ProjectInputs, output_dir: Path) -> str
         f"docs-{index + 1}. {file['path'].as_posix()}"
         for index, file in enumerate(inputs["docs"])
     )
-    # srcフォルダ以下のファイル一覧
-    src_refs = "\n".join(
-        f"src-{index + 1}. {file['path'].as_posix()}"
+    # ソースフォルダ以下のファイル一覧
+    source_refs = "\n".join(
+        f"source-{index + 1}. {file['path'].as_posix()}"
         for index, file in enumerate(inputs["src"])
     )
+
     # 指示プロンプトファイル出力先
     output_dir_text = str(output_dir.resolve())
     index_output_dir_text = str(output_dir.parent.resolve())
@@ -176,17 +260,18 @@ def build_docs_generation_prompt(inputs: ProjectInputs, output_dir: Path) -> str
 - overview.md を必ず生成してください。
 - overview.md は、このリポジトリ全体の設計ドキュメントにおける概要ページとして作成し、
   プロジェクト全体の主要な責務、構成の概要、設計書の役割をまとめてください。
-- overview.md には、`[src]` 参考入力に含まれる主要な Python ファイルやモジュールの代表例を
+- overview.md には、`[source]` 参考入力に含まれる主要な ソースファイルやモジュールの代表例を
   Markdown の表形式でまとめてください。
   表には少なくとも「ファイル / モジュール」「主な責務」「代表的な機能または備考」の列を含めてください。
   すべてのファイルを列挙せず、代表的な実装単位や主要機能を中心に整理してください。
 - overview.md の内容は、特定のディレクトリ構成（例: utils フォルダ）に依存しない汎用的な説明にしてください。
-- `src` のファイル一覧は分析用の参考入力です。ソースコードの修正は行わず、Markdown ファイル生成のみを行ってください。
-- 生成した Markdown 文書は指定した出力先ディレクトリに保存し、`src/` や既存ソースコードには変更を加えないでください。
+- `[source]` のファイル一覧は分析用の参考入力です。ソースコードの修正は行わず、Markdown ファイル生成のみを行ってください。
+- 生成した Markdown 文書は指定した出力先ディレクトリに保存し、参考入力として収集したソースファイルや、指定されたソースディレクトリには変更を加えないでください。
 - 出力は Markdown のみとし、ソースファイルの追加・編集・削除を含めないでください。
 
 禁止事項:
-- src配下の編集
+- 参考入力として指定したソースディレクトリ配下の編集
+- 参考入力として収集したソースファイルの編集
 - 既存Markdownの編集
 - 設定ファイルの編集
 - テストコードの編集
@@ -203,8 +288,8 @@ def build_docs_generation_prompt(inputs: ProjectInputs, output_dir: Path) -> str
 [docs]
 {docs_refs}
 
-[src]
-{src_refs}
+[source]
+{source_refs}
 """.strip()
 
 def build_docs_update_prompt(inputs: ProjectInputs, output_dir: Path) -> str:
@@ -225,16 +310,101 @@ def build_docs_update_prompt(inputs: ProjectInputs, output_dir: Path) -> str:
     """
     # docsフォルダ以下のファイル一覧
     existing_docs_refs = "\n".join(
-        f"--- {file['path'].name} ---\n{file['content']}"
-        for file in inputs["docs"] if file["content"]
+        f"--- {file['path'].as_posix()} ---\n{file['content']}"
+        for file in inputs["docs"]
     ) if inputs["docs"] else "docsフォルダに既存のドキュメントは存在しません。"
 
-    # srcフォルダ以下のファイル一覧
-    src_refs = "\n".join(
-        f"- {file['path'].as_posix()}"
-        for file in inputs["src"]
-    )
+    # ソースコードの内容をサイズ制限付きで構築
+    source_refs: list[str] = []
+    source_content_chars = 0
+    omitted_paths: list[Path] = []
 
+    for source_index, source_file in enumerate(inputs["src"]):
+        source_path = source_file["path"]
+        source_content = source_file["content"]
+
+        remaining_chars = (
+            MAX_SOURCE_CONTENT_CHARS - source_content_chars
+        )
+        if remaining_chars <= 0:
+            omitted_paths.extend(
+                file["path"]
+                for file in inputs["src"][source_index:]
+            )
+            break
+
+        file_header = f"--- {source_path.as_posix()} ---\n"
+        content_limit = min(
+            MAX_SOURCE_FILE_CHARS,
+            len(source_content),
+            max(0, remaining_chars - len(file_header)),
+        )
+
+        while True:
+            truncated = len(source_content) > content_limit
+            truncation_notice = (
+                "\n\n"
+                f"[このファイルは{content_limit:,}文字で切り詰めています]"
+                if truncated else ""
+            )
+        
+        # source_refs.append(
+        #     f"--- {source_path.as_posix()} ---\n{content}"
+        # )
+        # source_content_chars += len(source_content[:content_limit])
+
+            source_entry = (
+                f"{file_header}"
+                f"{source_content[:content_limit]}"
+                f"{truncation_notice}"
+            )
+
+            if len(source_entry) <= remaining_chars:
+                break
+
+            if content_limit == 0:
+                source_entry = ""
+                break
+
+            content_limit -= min(
+                content_limit,
+                len(source_entry) - remaining_chars,
+            )
+
+        if not source_entry:
+            omitted_paths.extend(
+                file["path"]
+                for file in inputs["src"][source_index:]
+            )
+            break
+
+        source_refs.append(source_entry)
+        source_content_chars += len(source_entry)
+
+    if omitted_paths:
+        omitted_notice = (
+            "\n\n[入力サイズ上限により省略したファイル]\n"
+            + "\n".join(
+                f"- {path.as_posix()}"
+                for path in omitted_paths
+            )
+        )
+
+        remaining_chars = MAX_SOURCE_CONTENT_CHARS - source_content_chars
+        if len(omitted_notice) <= remaining_chars:
+            source_refs.append(omitted_notice)
+            source_content_chars += len(omitted_notice)
+        else:
+            omitted_summary = (
+                "\n\n"
+                f"[入力サイズ上限により{len(omitted_paths)}ファイルを省略しました]"
+            )
+            if len(omitted_summary) <= remaining_chars:
+                source_refs.append(omitted_summary)
+                source_content_chars += len(omitted_summary)
+            
+    source_refs_text = "\n\n".join(source_refs)
+    
     # 指示プロンプトファイル出力先
     output_dir_text = str(output_dir.resolve())
     index_output_dir_text = str(output_dir.parent.resolve())
@@ -269,14 +439,14 @@ def build_docs_update_prompt(inputs: ProjectInputs, output_dir: Path) -> str:
 - 設計変更が必要な場合は、その旨を明記してください
 - 既存の優れた説明は保持し、古い情報のみ更新してください
 - 修正内容には修正理由を簡潔に記載してください
-- `src` のファイルは修正対象ではなく、分析用の参考入力です
+- `[source]` のファイルは修正対象ではなく、分析用の参考入力です
 
 修正対象は以下の出力先ディレクトリに保存してください: {output_dir_text}
 （`index.md` は {index_output_dir_text} の直下）
 
 禁止事項:
 - ドキュメント全体の再生成（差分のみ）
-- src配下の編集
+- 参考入力として指定したソースディレクトリ配下の編集
 - ソースコード修正
 - 設定ファイル編集
 
@@ -289,7 +459,7 @@ def build_docs_update_prompt(inputs: ProjectInputs, output_dir: Path) -> str:
 {existing_docs_refs}
 
 【現在のソースコード構成】
-{src_refs}
+{source_refs_text}
 """.strip()
 
 def write_prompt_to_file(prompt: str, output_dir: Path, mode: Literal["generate", "update"]) -> dict[str, Path]:
@@ -345,6 +515,19 @@ def parse_args(argv=None) -> argparse.Namespace:
         help="実行モード: generate=1から生成, update=既存ドキュメント更新",
     )
     parser.add_argument(
+        "--source-dir",
+        type=Path,
+        nargs="+",
+        default=None,
+        help="ソースコードを探索するディレクトリ。複数指定可能",
+    )
+    parser.add_argument(
+        "--source-ext",
+        nargs="+",
+        default=None,
+        help="収集対象の拡張子。複数指定可能",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("docs/reference"),
@@ -377,6 +560,8 @@ def main(argv=None) -> int:
     inputs = collect_project_inputs_with_content(
         project_root, 
         mode=args.mode,
+        source_dirs=args.source_dir,
+        source_extensions=args.source_ext,
         excluded_dirs=[prompt_output_dir],
     )
 

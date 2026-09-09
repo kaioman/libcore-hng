@@ -8,6 +8,9 @@ from libcore_hng.cli.docs_prompt import (
     build_docs_generation_prompt, 
     build_docs_update_prompt,
     collect_project_inputs_with_content, 
+    MAX_SOURCE_FILE_CHARS,
+    MAX_SOURCE_CONTENT_CHARS,
+    parse_args,
     write_prompt_to_file
 )
 from libcore_hng.models.doc_types import FileContent
@@ -33,7 +36,8 @@ def test_collect_project_inputs_with_content_returns_expected_files_in_generate_
     assert [f["path"].name for f in result["docs"]] == ["architecture.md"]
     assert [f["path"].name for f in result["src"]] == ["sample.py"]
     assert result["docs"][0]["content"] == ""
-    assert result["src"][0]["content"] == "VALUE = 1\n"
+    #assert result["src"][0]["content"] == "VALUE = 1\n"
+    assert result["src"][0]["content"] == ""
 
 def test_collect_project_inputs_with_content_reads_content_in_update_mode(tmp_path: Path) -> None:
     """
@@ -284,4 +288,90 @@ def test_docs_prompt_generates_prompt_for_repo_root(tmp_path: Path) -> None:
     assert "overview.md" in prompt_text
     assert str(docs_output_dir.resolve()) in prompt_text
     assert "docs-" in prompt_text
-    assert "src-" in prompt_text
+    assert "source-" in prompt_text
+
+def test_collect_project_inputs_uses_custom_source_dirs_and_extentsions(tmp_path: Path) -> None:
+    """
+    source_dirs と source_extensions で、対象ソース収集範囲が拡張できることを確認
+    """
+    base_dir = tmp_path / "project"
+    app_dir = base_dir / "app"
+    legacy_dir = base_dir / "legacy"
+    app_dir.mkdir(parents=True)
+    legacy_dir.mkdir(parents=True)
+
+    (app_dir / "main.py").write_text("print('keep')\n", encoding="utf-8")
+    (legacy_dir / "legacy.ts").write_text("export const value = 1\n", encoding="utf-8")
+    (legacy_dir / "notes.txt").write_text("ignore me\n", encoding="utf-8")
+
+    result = collect_project_inputs_with_content(
+        base_dir,
+        mode="generate",
+        source_dirs=["app", "legacy"],
+        source_extensions=[".py", ".ts"],
+    )
+
+    collected = {file["path"].name for file in result["src"]}
+    assert collected == {"main.py", "legacy.ts"}
+
+def test_collect_project_inputs_excludes_default_directory_names(tmp_path: Path) -> None:
+    """
+    DEFAULT_EXCLUDED_DIRS に含まれるディレクトリは収集対象外になることを確認
+    """
+    base_dir = tmp_path / "project"
+    src_dir = base_dir / "src"
+    node_modules_dir = base_dir / "node_modules"
+    src_dir.mkdir(parents=True)
+    node_modules_dir.mkdir(parents=True)
+
+    kept = src_dir / "keep.py"
+    excluded = node_modules_dir / "ignored.js"
+    kept.write_text("print('keep')\n", encoding="utf-8")
+    excluded.write_text("console.log('skip')\n", encoding="utf-8")
+
+    result = collect_project_inputs_with_content(
+        base_dir,
+        mode="generate"
+    )
+
+    assert [file["path"].name for file in result["src"]] == ["keep.py"]
+    assert all(file["path"] != excluded for file in result["src"])
+
+def test_parse_args_supports_multiple_source_dirs_and_extensions() -> None:
+    """
+    --source-dir と --source-ext の複数指定が argparse で正しく解釈されるか確認
+    """
+    args = parse_args([
+        "--source-dir", "src", "app",
+        "--source-ext", ".py", ".ts",
+    ])
+
+    assert args.source_dir == [Path("src"), Path("app")]
+    assert args.source_ext == [".py", ".ts"]
+
+def test_build_docs_update_prompt_truncates_large_source_input(tmp_path: Path) -> None:
+    """
+    update モードで巨大ソース入力が上限に達した場合に、切り詰め通知が含まれることを確認
+    """
+    base_dir = tmp_path / "debug_generated-docs"
+    docs_dir = base_dir / "docs"
+    src_dir = base_dir / "src"
+    docs_dir.mkdir(parents=True)
+    src_dir.mkdir(parents=True)
+
+    doc_file = docs_dir / "architecture.md"
+    doc_file.write_text("# architecture\n", encoding="utf-8")
+    long_source = "x" * (MAX_SOURCE_FILE_CHARS * 2)
+    source_file = src_dir / "large.py"
+    source_file.write_text(long_source, encoding="utf-8")
+
+    inputs = {
+        "docs": [FileContent(path=doc_file, content="# architecture\n")],
+        "src": [FileContent(path=source_file, content=long_source)]        
+    }
+
+    prompt = build_docs_update_prompt(inputs, base_dir / "docs" / "reference")
+
+    assert "切り詰めています" in prompt
+    assert source_file.name in prompt
+    assert len(prompt) < MAX_SOURCE_FILE_CHARS * 10
