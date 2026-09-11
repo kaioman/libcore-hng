@@ -187,11 +187,11 @@ def _get_gcp_secret_key(gcp_config: GcpConfig) -> Optional[bytes]:
     """
 
     # 1. 環境変数または gcp_configから WIFパラメーターを取得
-    project_number = gcp_config.project_number or os.environ.get("GCP_PROJECT_NUMBER")
-    pool_id = gcp_config.pool_id or os.environ.get("GCP_WIF_POOL_ID")
-    provider_id = gcp_config.provider_id or os.environ.get("GCP_WIF_PROVIDER_ID")
-    issuer = gcp_config.issuer or os.environ.get("GCP_WIF_ISSUER")
-    kid = gcp_config.kid or os.environ.get("GCP_WIF_KID")
+    project_number = os.environ.get("GCP_PROJECT_NUMBER") or gcp_config.project_number
+    pool_id = os.environ.get("GCP_WIF_POOL_ID") or gcp_config.pool_id
+    provider_id = os.environ.get("GCP_WIF_PROVIDER_ID") or gcp_config.provider_id
+    issuer = os.environ.get("GCP_WIF_ISSUER") or gcp_config.issuer
+    kid = os.environ.get("GCP_WIF_KID") or gcp_config.kid
     # 秘密鍵のパス(環境変数優先、無ければデフォルトパス)
     private_key_path = os.environ.get(
         "WIF_PRIVATE_KEY_PATH",
@@ -249,13 +249,17 @@ def _get_gcp_secret_key(gcp_config: GcpConfig) -> Optional[bytes]:
             app_logger.warning("Workload Identity Federation の設定が不完全です。環境変数またはapp_config.jsonを確認してください。")
         
     # 環境変数または通常のGCP認証で取得
-    project_id = gcp_config.project_id if gcp_config.project_id else os.environ.get("GCP_PROJECT_ID")
-    secret_name_from_config = gcp_config.secret_name if gcp_config.secret_name else os.environ.get("GCP_SECRET_NAME")
-    app_env = gcp_config.app_env if gcp_config.app_env else os.environ.get("APP_ENV", "dev")
+    project_id = os.environ.get("GCP_PROJECT_ID") or gcp_config.project_id
+    secret_name_from_config = os.environ.get("GCP_SECRET_NAME") or gcp_config.secret_name
+    app_env = os.environ.get("APP_ENV") or gcp_config.app_env
+    if not app_env:
+        raise CryptoException("APP_ENVが設定されていません。環境変数を確認してください。")
 
+    # project_idとsecret_nameが揃っていない場合はNoneを返す
     if not project_id or not secret_name_from_config:
         return None
 
+    # secret_idを組み立てる
     secret_id = f"{secret_name_from_config}-{app_env}"
     
     try:
