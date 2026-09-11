@@ -132,7 +132,7 @@ AI に対しては、以下の実装を提案しないことを基本方針と�
 
 ### 6.2 保持方針
 
-- 設定ファイルは [configs](configs) 配下に配置する
+- 設定ファイルは [configs](../../configs) 配下に配置する
 - 暗号化ファイルは拡張子 .enc を付与する
 - 復号後の一時ファイルは一時ディレクトリで扱う
 - 設定変更時は暗号化ファイルを再生成する
@@ -198,9 +198,9 @@ flowchart LR
 
 ### 9.2 実装上の判断条件
 
-- [src/libcore_hng/utils/file_renamer.py](src/libcore_hng/utils/file_renamer.py)
+- [src/libcore_hng/utils/file_renamer.py](../../src/libcore_hng/utils/file_renamer.py)
   - `on_conflict` が `error` / `skip` / `overwrite` のいずれかでない場合は例外
-- [src/libcore_hng/cli/decrypt_to_encrypt.py](src/libcore_hng/cli/decrypt_to_encrypt.py)
+- [src/libcore_hng/cli/decrypt_to_encrypt.py](../../src/libcore_hng/cli/decrypt_to_encrypt.py)
   - 入力ファイルが存在しない場合は処理終了
 
 ---

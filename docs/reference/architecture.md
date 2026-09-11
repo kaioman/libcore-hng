@@ -33,7 +33,7 @@
 - 機密設定の安全な管理
 - ローカルファイルやデータの操作支援
 
-この責務は [src/libcore_hng/core](src/libcore_hng/core)、[src/libcore_hng/utils](src/libcore_hng/utils)、[src/libcore_hng/exceptions](src/libcore_hng/exceptions) に集約されています。
+この責務は [src/libcore_hng/core](../../src/libcore_hng/core)、[src/libcore_hng/utils](../../src/libcore_hng/utils)、[src/libcore_hng/exceptions](../../src/libcore_hng/exceptions) に集約されています。
 
 ---
 
@@ -53,7 +53,7 @@
 
 ### 2.2 主要依存関係
 
-[pyproject.toml](pyproject.toml) では、次の依存関係が定義されています。
+[pyproject.toml](../../pyproject.toml) では、次の依存関係が定義されています。
 
 - pydantic
 - psutil
@@ -70,22 +70,22 @@
 
 ### 3.1 主要ディレクトリ
 
-- [src/libcore_hng](src/libcore_hng): 実装本体
-  - [src/libcore_hng/core](src/libcore_hng/core): 共通基盤クラス
-  - [src/libcore_hng/utils](src/libcore_hng/utils): ユーティリティ群
-  - [src/libcore_hng/exceptions](src/libcore_hng/exceptions): 独自例外群
-  - [src/libcore_hng/configs](src/libcore_hng/configs): 設定モデル群
-  - [src/libcore_hng/cli](src/libcore_hng/cli): CLI ツール群
-- [configs](configs): 設定ファイルの配置先
-- [tests](tests): テストコードとテストデータ
-- [docs](docs): 設計書・ルール文書
+- [src/libcore_hng](../../src/libcore_hng): 実装本体
+  - [src/libcore_hng/core](../../src/libcore_hng/core): 共通基盤クラス
+  - [src/libcore_hng/utils](../../src/libcore_hng/utils): ユーティリティ群
+  - [src/libcore_hng/exceptions](../../src/libcore_hng/exceptions): 独自例外群
+  - [src/libcore_hng/configs](../../src/libcore_hng/configs): 設定モデル群
+  - [src/libcore_hng/cli](../../src/libcore_hng/cli): CLI ツール群
+- [configs](../../configs): 設定ファイルの配置先
+- [tests](../../tests): テストコードとテストデータ
+- [docs](../../docs): 設計書・ルール文書
 
 ### 3.2 変更時の判断基準
 
-- 共通基盤の変更は [src/libcore_hng/core](src/libcore_hng/core) を優先して確認する
-- 具体的な処理追加は [src/libcore_hng/utils](src/libcore_hng/utils) に寄せる
-- 例外仕様の追加は [src/libcore_hng/exceptions](src/libcore_hng/exceptions) で扱う
-- 設定項目の追加は [src/libcore_hng/configs](src/libcore_hng/configs) と [configs](configs) を合わせて確認する
+- 共通基盤の変更は [src/libcore_hng/core](../../src/libcore_hng/core) を優先して確認する
+- 具体的な処理追加は [src/libcore_hng/utils](../../src/libcore_hng/utils) に寄せる
+- 例外仕様の追加は [src/libcore_hng/exceptions](../../src/libcore_hng/exceptions) で扱う
+- 設定項目の追加は [src/libcore_hng/configs](../../src/libcore_hng/configs) と [configs](../../configs) を合わせて確認する
 
 ---
 
@@ -117,7 +117,7 @@ flowchart TD
 - App Logger / Crypto / Secret Manager
   - ログ出力、暗号化、シークレット取得を担当する
 
-この構成の中心は [src/libcore_hng/utils/app_core.py](src/libcore_hng/utils/app_core.py) と [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py) です。
+この構成の中心は [src/libcore_hng/utils/app_core.py](../../src/libcore_hng/utils/app_core.py) と [src/libcore_hng/core/base_config.py](../../src/libcore_hng/core/base_config.py) です。
 
 ---
 
@@ -130,7 +130,7 @@ flowchart TD
 ### 5.2 CLI 入口
 
 - decrypt-to-encrypt
-  - 実装: [src/libcore_hng/cli/decrypt_to_encrypt.py](src/libcore_hng/cli/decrypt_to_encrypt.py)
+  - 実装: [src/libcore_hng/cli/decrypt_to_encrypt.py](../../src/libcore_hng/cli/decrypt_to_encrypt.py)
   - 役割: 暗号化済み設定ファイルを復号し、編集後に再暗号化する
 
 AI Agent が新しい入口を追加する場合は、CLI 追加かライブラリ API 追加かを最初に判断するべきです。
@@ -145,9 +145,9 @@ AI Agent が新しい入口を追加する場合は、CLI 追加かライブラ�
 
 ### 6.2 保持対象
 
-- 設定ファイル: [configs](configs)
-- 暗号化ファイル: [tests/enc_file](tests/enc_file)
-- テストデータ: [tests/data](tests/data)
+- 設定ファイル: [configs](../../configs)
+- 暗号化ファイル: [tests/enc_file](../../tests/enc_file)
+- テストデータ: [tests/data](../../tests/data)
 
 この構成は、永続化層としてデータベースではなくファイルベースを採用していることを示しています。
 
@@ -200,14 +200,14 @@ flowchart LR
 
 | 変数名 | 用途 | 利用箇所 |
 | --- | --- | --- |
-| CONFIG_DIR_NAME | 設定ディレクトリ名の上書き | [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py) |
-| PROJECT_ROOT | プロジェクトルートの指定 | [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py) |
-| CONFIG_DIR | 設定ディレクトリの指定 | [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py) |
-| WIF_PRIVATE_KEY_PATH | WIF 用秘密鍵パス | [src/libcore_hng/utils/secret_manager.py](src/libcore_hng/utils/secret_manager.py) |
-| GCP_PROJECT_ID | GCP プロジェクト ID | [src/libcore_hng/utils/secret_manager.py](src/libcore_hng/utils/secret_manager.py) |
-| GCP_SECRET_NAME | GCP Secret Manager のシークレット名 | [src/libcore_hng/utils/secret_manager.py](src/libcore_hng/utils/secret_manager.py) |
-| APP_ENV | Secret Manager の環境サフィックス | [src/libcore_hng/utils/secret_manager.py](src/libcore_hng/utils/secret_manager.py) |
-| APP_SECRET_KEY | 復号鍵の直接指定 | [src/libcore_hng/utils/secret_manager.py](src/libcore_hng/utils/secret_manager.py) |
+| CONFIG_DIR_NAME | 設定ディレクトリ名の上書き | [src/libcore_hng/core/base_config.py](../../src/libcore_hng/core/base_config.py) |
+| PROJECT_ROOT | プロジェクトルートの指定 | [src/libcore_hng/core/base_config.py](../../src/libcore_hng/core/base_config.py) |
+| CONFIG_DIR | 設定ディレクトリの指定 | [src/libcore_hng/core/base_config.py](../../src/libcore_hng/core/base_config.py) |
+| WIF_PRIVATE_KEY_PATH | WIF 用秘密鍵パス | [src/libcore_hng/utils/secret_manager.py](../../src/libcore_hng/utils/secret_manager.py) |
+| GCP_PROJECT_ID | GCP プロジェクト ID | [src/libcore_hng/utils/secret_manager.py](../../src/libcore_hng/utils/secret_manager.py) |
+| GCP_SECRET_NAME | GCP Secret Manager のシークレット名 | [src/libcore_hng/utils/secret_manager.py](../../src/libcore_hng/utils/secret_manager.py) |
+| APP_ENV | Secret Manager の環境サフィックス | [src/libcore_hng/utils/secret_manager.py](../../src/libcore_hng/utils/secret_manager.py) |
+| APP_SECRET_KEY | 復号鍵の直接指定 | [src/libcore_hng/utils/secret_manager.py](../../src/libcore_hng/utils/secret_manager.py) |
 
 ---
 
@@ -234,8 +234,8 @@ flowchart LR
 
 AI Agent がこのリポジトリを編集する際は、次の順序で理解すると効率的です。
 
-1. まず [src/libcore_hng/utils/app_core.py](src/libcore_hng/utils/app_core.py) で初期化フローを把握する
-2. 次に [src/libcore_hng/core/base_config.py](src/libcore_hng/core/base_config.py) で設定ロードの流れを確認する
-3. 追加する機能がロギング・暗号化・ファイル処理に関わる場合は [src/libcore_hng/utils](src/libcore_hng/utils) を優先する
-4. 例外仕様を追加する場合は [src/libcore_hng/exceptions](src/libcore_hng/exceptions) に合わせる
-5. 設定項目を増やす場合は [src/libcore_hng/configs](src/libcore_hng/configs) と [configs](configs) の両方を更新する
+1. まず [src/libcore_hng/utils/app_core.py](../../src/libcore_hng/utils/app_core.py) で初期化フローを把握する
+2. 次に [src/libcore_hng/core/base_config.py](../../src/libcore_hng/core/base_config.py) で設定ロードの流れを確認する
+3. 追加する機能がロギング・暗号化・ファイル処理に関わる場合は [src/libcore_hng/utils](../../src/libcore_hng/utils) を優先する
+4. 例外仕様を追加する場合は [src/libcore_hng/exceptions](../../src/libcore_hng/exceptions) に合わせる
+5. 設定項目を増やす場合は [src/libcore_hng/configs](../../src/libcore_hng/configs) と [configs](../../configs) の両方を更新する

@@ -35,7 +35,7 @@ class GcpConfig(BaseConfigModel):
     issuer: str = Field(default="", description="自前JWTのIssuer (発行者)")
     """ 自前JWTのIssuer (発行者) """
 
-    app_env: str = Field(default="dev", description="アプリケーション環境 (dev, prdなど) Secret ManagerのSecret IDのサフィックスに使用")
+    app_env: str = Field(default="", description="アプリケーション環境 (dev, prdなど) Secret ManagerのSecret IDのサフィックスに使用")
     """ アプリケーション環境 (dev, prdなど) Secret ManagerのSecret IDのサフィックスに使用 """
     
     kid: str = Field(default="wif-key-01", description="Workload Identity FederationのJWT署名に使用するKey ID")

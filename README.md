@@ -23,14 +23,14 @@ libcore-hng は、設定管理・ロギング・例外処理・暗号化・フ�
 
 ## 参考ドキュメント
 
-- [docs/architecture.md](docs/architecture.md)
-- [docs/business_rules.md](docs/business_rules.md)
-- [docs/architecture_rules.md](docs/architecture_rules.md)
-- [docs/coding_rules.md](docs/coding_rules.md)
-- [docs/directory_rules.md](docs/directory_rules.md)
-- [docs/naming_rules.md](docs/naming_rules.md)
-- [docs/testing_rules.md](docs/testing_rules.md)
-- [docs/utils_overview.md](docs/utils_overview.md)
+- [docs/reference/architecture.md](docs/reference/architecture.md)
+- [docs/reference/business_rules.md](docs/reference/business_rules.md)
+- [docs/reference/architecture_rules.md](docs/reference/architecture_rules.md)
+- [docs/reference/coding_rules.md](docs/reference/coding_rules.md)
+- [docs/reference/directory_rules.md](docs/reference/directory_rules.md)
+- [docs/reference/naming_rules.md](docs/reference/naming_rules.md)
+- [docs/reference/testing_rules.md](docs/reference/testing_rules.md)
+- [docs/reference/utils_overview.md](docs/reference/utils_overview.md)
 
 - 詳細な設計・ルール・テスト方針の入口は [docs/index.md](docs/index.md) を参照してください。
 
@@ -40,6 +40,7 @@ libcore-hng は、設定管理・ロギング・例外処理・暗号化・フ�
 共通の初期化は `libcore_hng.utils.app_core.init_app()` で行い、アプリごとの設定型はアプリ側で拡張します。
 また、アプリ固有の起動モジュール `app_init.py`(アプリごとに作成)で `config` をモジュールグローバルとして公開することで別ファイルからも拡張設定を型付きで参照できます。
 バージョン2.0.27以前との互換性を保つため、 `app.core.config` への参照も継続して利用できます
+
 ---
 
 ### アプリ初期化方法
@@ -102,7 +103,7 @@ print(config.logging.log_method_end_emoji)
 
 ### 設定ファイルの暗号化と復号鍵の管理
 
-機密情報を含む設定ファイルを保護するため、ファイルを暗号化し、その復号鍵を Google Cloud Secret Manager に安全に保存して管理します。開発環境と本番環境で同じ仕組みを使用することで、セキュアで統一された運用が可能です。詳細な運用方針は [docs/business_rules.md](docs/business_rules.md) を参照してください。
+機密情報を含む設定ファイルを保護するため、ファイルを暗号化し、その復号鍵を Google Cloud Secret Manager に安全に保存して管理します。開発環境と本番環境で同じ仕組みを使用することで、セキュアで統一された運用が可能です。詳細な運用方針は [docs/reference/business_rules.md](docs/reference/business_rules.md) を参照してください。
 
 #### 手順
 
@@ -128,7 +129,7 @@ print("以下の鍵を GCP Secret Manager に登録してください:")
 print(key.decode("utf-8"))
 ```
 
-`BaseConfig.load_config` は拡張子が `.enc` のファイルを自動的に検知し、暗号化ファイルとして復号・ロードする機能を備えています。実装上の詳細や制約は [docs/architecture.md](docs/architecture.md) と [docs/architecture_rules.md](docs/architecture_rules.md) を参照してください。
+`BaseConfig.load_config` は拡張子が `.enc` のファイルを自動的に検知し、暗号化ファイルとして復号・ロードする機能を備えています。実装上の詳細や制約は [docs/reference/architecture.md](docs/reference/architecture.md) と [docs/reference/architecture_rules.md](docs/reference/architecture_rules.md) を参照してください。
 
 復号に必要なGCP設定は、以下の環境変数、または`app_config.json`で設定された値から自動的に取得されます。
 
@@ -211,11 +212,11 @@ services:
 
 特に、以下のファイル群は再利用を意識した構成です。
 
-- [docs/architecture.md](docs/architecture.md)
-- [docs/business_rules.md](docs/business_rules.md)
-- [docs/architecture_rules.md](docs/architecture_rules.md)
-- [docs/coding_rules.md](docs/coding_rules.md)
-- [docs/directory_rules.md](docs/directory_rules.md)
-- [docs/naming_rules.md](docs/naming_rules.md)
-- [docs/testing_rules.md](docs/testing_rules.md)
+- [docs/reference/architecture.md](docs/reference/architecture.md)
+- [docs/reference/business_rules.md](docs/reference/business_rules.md)
+- [docs/reference/architecture_rules.md](docs/reference/architecture_rules.md)
+- [docs/reference/coding_rules.md](docs/reference/coding_rules.md)
+- [docs/reference/directory_rules.md](docs/reference/directory_rules.md)
+- [docs/reference/naming_rules.md](docs/reference/naming_rules.md)
+- [docs/reference/testing_rules.md](docs/reference/testing_rules.md)
 - [.github/copilot-instructions.md](.github/copilot-instructions.md)
