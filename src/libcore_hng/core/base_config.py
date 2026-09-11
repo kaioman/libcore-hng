@@ -132,7 +132,21 @@ class BaseConfig(BaseConfigModel):
                     data = json.loads(raw_bytes.decode("utf-8"))
                     _deep_merge_dict(merged, data)
                 except Exception as e:
-                    print(f"設定ファイル `{file_name}` の復号に失敗したためスキップします。詳細: {e.exc_value}")
+                    exception_value = getattr(e, "exc_value", None)
+                    if exception_value is not None:
+                        detail = str(exception_value)
+                        if not detail:
+                            detail = (
+                                f"{type(exception_value).__name__}: "
+                                f"{exception_value!r}"
+                            )
+                    else:
+                        detail = str(e) or repr(e)
+
+                    print(
+                        f"設定ファイル `{file_name}` の復号に失敗したため"
+                        f"スキップします。詳細: {detail}"
+                    )
                     continue
             else:
                 # --- 通常のJSONファイルの場合 ---
