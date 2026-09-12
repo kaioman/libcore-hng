@@ -319,18 +319,33 @@ def build_docs_update_prompt(inputs: ProjectInputs, output_dir: Path) -> str:
     source_content_chars = 0
     omitted_paths: list[Path] = []
 
+    def build_omitted_notice(paths: list[Path]) -> str:
+        return (
+            "\n\n[入力サイズ上限により省略したファイル]\n"
+            + "\n".join(
+                f"- {path.as_posix()}"
+                for path in paths
+            )
+        )
+
     for source_index, source_file in enumerate(inputs["src"]):
         source_path = source_file["path"]
         source_content = source_file["content"]
 
+        remaining_paths = [
+            file["path"]
+            for file in inputs["src"][source_index:]
+        ]
+        omitted_notice_reserve = len(
+            build_omitted_notice(remaining_paths)
+        )
         remaining_chars = (
-            MAX_SOURCE_CONTENT_CHARS - source_content_chars
+            MAX_SOURCE_CONTENT_CHARS
+            - source_content_chars
+            - omitted_notice_reserve
         )
         if remaining_chars <= 0:
-            omitted_paths.extend(
-                file["path"]
-                for file in inputs["src"][source_index:]
-            )
+            omitted_paths.extend(remaining_paths)
             break
 
         file_header = f"--- {source_path.as_posix()} ---\n"
@@ -348,11 +363,6 @@ def build_docs_update_prompt(inputs: ProjectInputs, output_dir: Path) -> str:
                 if truncated else ""
             )
         
-        # source_refs.append(
-        #     f"--- {source_path.as_posix()} ---\n{content}"
-        # )
-        # source_content_chars += len(source_content[:content_limit])
-
             source_entry = (
                 f"{file_header}"
                 f"{source_content[:content_limit]}"
@@ -382,13 +392,7 @@ def build_docs_update_prompt(inputs: ProjectInputs, output_dir: Path) -> str:
         source_content_chars += len(source_entry)
 
     if omitted_paths:
-        omitted_notice = (
-            "\n\n[入力サイズ上限により省略したファイル]\n"
-            + "\n".join(
-                f"- {path.as_posix()}"
-                for path in omitted_paths
-            )
-        )
+        omitted_notice = build_omitted_notice(omitted_paths)
 
         remaining_chars = MAX_SOURCE_CONTENT_CHARS - source_content_chars
         if len(omitted_notice) <= remaining_chars:

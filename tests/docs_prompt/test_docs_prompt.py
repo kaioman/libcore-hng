@@ -36,7 +36,6 @@ def test_collect_project_inputs_with_content_returns_expected_files_in_generate_
     assert [f["path"].name for f in result["docs"]] == ["architecture.md"]
     assert [f["path"].name for f in result["src"]] == ["sample.py"]
     assert result["docs"][0]["content"] == ""
-    #assert result["src"][0]["content"] == "VALUE = 1\n"
     assert result["src"][0]["content"] == ""
 
 def test_collect_project_inputs_with_content_reads_content_in_update_mode(tmp_path: Path) -> None:
@@ -375,3 +374,51 @@ def test_build_docs_update_prompt_truncates_large_source_input(tmp_path: Path) -
     assert "切り詰めています" in prompt
     assert source_file.name in prompt
     assert len(prompt) < MAX_SOURCE_FILE_CHARS * 10
+
+def test_build_docs_update_prompt_limits_total_source_content(tmp_path: Path) -> None:
+    """
+    update モードでソースコード全体の入力ファイルが上限を超えた場合に、
+    後続ファイルが省略されることを確認する
+    """
+    base_dir = tmp_path / "debug_generated-docs"
+    docs_dir = base_dir / "docs"
+    src_dir = base_dir / "src"
+    docs_dir.mkdir(parents=True)
+    src_dir.mkdir(parents=True)
+
+    doc_file = docs_dir / "architecture.md"
+    doc_file.write_text("# architecture\n", encoding="utf-8")
+
+    source_file_count = (
+        MAX_SOURCE_CONTENT_CHARS // MAX_SOURCE_FILE_CHARS
+    ) + 1
+    source_files = []
+    for index in range(source_file_count):
+        source_file = src_dir / f"source_{index:02d}.py"
+        maker = f"SOURCE_MAKER_{index:02d}"
+        content = maker + (
+            "x" * (MAX_SOURCE_FILE_CHARS - len(maker))
+        )
+        source_file.write_text(content, encoding="utf-8")
+        source_files.append(
+            FileContent(path=source_file, content=content)
+        )
+
+    inputs = {
+        "docs": [
+            FileContent(path=doc_file, content="# architecture\n")
+        ],
+        "src": source_files,
+    }
+
+    prompt = build_docs_update_prompt(
+        inputs,
+        base_dir / "docs" / "reference",
+    )
+
+    assert "入力サイズ上限により省略したファイル" in prompt
+    assert "SOURCE_MAKER_00" in prompt
+    assert f"source_{source_file_count - 1:02d}.py" in prompt
+    assert (
+        f"SOURCE_MAKER_{source_file_count - 1:02d}" not in prompt
+    )
