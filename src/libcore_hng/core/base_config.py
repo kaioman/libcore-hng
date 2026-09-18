@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from pathlib import Path
 from typing import TypeVar, Dict, Any
 from libcore_hng.core.base_config_model import BaseConfigModel
@@ -73,6 +74,15 @@ class BaseConfig(BaseConfigModel):
             discover_enc_paths = sorted(config_dir.glob("*.enc"))
             config_paths = [*discover_json_paths, *discover_enc_paths]
 
+        # 環境名称を取得
+        current_app_env = os.environ.get("APP_ENV")
+        # 環境別設定ファイルのリストを作成
+        env_specific_enc_files = [
+            p.name
+            for p in config_paths
+            if p.name.endswith(".enc") and _looks_like_env_specific_config(p.name, current_app_env)
+        ]
+
         # 統合された設定ファイルを読み込む
         for config_path in config_paths:
             file_name = config_path.name
@@ -118,11 +128,18 @@ class BaseConfig(BaseConfigModel):
                 )
                 print(f"設定ファイル \'{file_name}\' の読み込みに失敗しました。詳細: {error_message}")
                 raise ConfigurationException(error_message)
-            if file_name.endswith(".enc"):
+            if file_name.endswith(".enc"):                
                 # --- 暗号化ファイル (.enc) の場合 ---
+                # 環境別設定ファイルがある場合は、そちらを優先する。ない場合は汎用設定ファイルを復号する
+                if not _should_load_encrypted_config(file_name, current_app_env, env_specific_enc_files):
+                    print(
+                        f"暗号化設定ファイル `{file_name}` は APP_ENV=`{current_app_env}` と一致しないためスキップします。"
+                    )
+                    continue
+
                 # 循環参照を避けるため関数内でインポート
                 from libcore_hng.utils.secret_manager import load_secret_with_gcp_config
-                
+
                 # GCP設定を辞書として渡す
                 gcp_config_dict = merged.get("gcp", {})
 
@@ -170,6 +187,73 @@ def _deep_merge_dict(base: dict[str, Any], incomiing: dict[str, Any]) -> None:
             _deep_merge_dict(base[key], value)
         else:
             base[key] = value
+
+def _looks_like_env_specific_config(file_name: str, app_env: str | None) -> bool:
+    """
+    APP_ENVに対応する設定ファイルか判定する
+    
+    Parameters
+    ----------
+    file_name : str
+        設定ファイル名
+    app_env : str
+        環境名称(dev, prodなどの値) 
+    
+    Returns
+    -------
+    bool
+        判定結果
+    """
+
+    # 環境名称が指定されていない＋.encが含まれていない場合はFalse判定
+    if not app_env or not file_name.endswith(".enc"):
+        return False
+
+    # .encを除去したファイル名を取得
+    stem = file_name[:-4].lower()
+    env = app_env.lower()
+
+    # 区切り文字の前後に環境名称があるときだけ env-specific とみなす
+    pattern = rf"(?:^|[._-]){env}(?:$|[._-])"
+    return bool(re.search(pattern, stem))
+
+def _should_load_encrypted_config(file_name: str, app_env: str | None, env_specific_enc_files: list[str]) -> bool:
+    """
+    APP_ENVに対応する設定ファイルか判定する
+
+    Parameters
+    ----------
+
+    file_name : str
+        設定ファイル名
+    app_env : str
+        環境名称(dev, prodなどの値)
+
+    Returns
+    -------
+    bool
+        判定結果
+            True  :復号する
+            False :復号対象から除外する
+    """
+
+    # 環境名称が指定されていない場合はOK判定
+    if not app_env:
+        return True
+
+    # 設定ファイル名に.encが含まれていない場合はOK判定
+    if not file_name.endswith(".enc"):
+        return True
+
+    if _looks_like_env_specific_config(file_name, app_env):
+        return True
+
+    # この環境用の専用 .enc があるなら、汎用設定ファイルを使わない
+    if env_specific_enc_files:
+        return False
+
+    # 専用 .enc が無ければ、汎用設定ファイルをフォールバックとして読込対象とする
+    return True
 
 cfg: BaseConfig | None = None
 """ 共通設定クラスインスタンス """
