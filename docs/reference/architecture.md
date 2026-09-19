@@ -209,6 +209,12 @@ flowchart LR
 | APP_ENV | Secret Manager の環境サフィックス | [src/libcore_hng/utils/secret_manager.py](../../src/libcore_hng/utils/secret_manager.py) |
 | APP_SECRET_KEY | 復号鍵の直接指定 | [src/libcore_hng/utils/secret_manager.py](../../src/libcore_hng/utils/secret_manager.py) |
 
+### 9.2 APP_ENVによる暗号化設定ファイルの選別
+
+`BaseConfig.load_config` は `APP_ENV` を参照し、`.enc` ファイルの候補を環境別に絞り込みます。
+このとき、該当環境の設定ファイルが存在する場合はそれを優先し、他環境の暗号化ファイルは原則として復号対象にしません。
+環境別ファイルがない場合のみ、汎用の暗号化ファイルを読み込むフォールバック戦略を採用します。
+
 ---
 
 ## 10. 外部連携
