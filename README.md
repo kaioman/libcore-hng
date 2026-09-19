@@ -217,6 +217,15 @@ print(key.decode("utf-8"))
 - `GCP_SECRET_NAME`: GCP Secret Manager に登録したシークレットのベース名。WIF無効時に使用。
 - `APP_ENV`: 環境名（例: `dev`, `prod`）。シークレット名のサフィックスとして使用されます（デフォルト: `dev`）。
 
+### APP_ENV に一致する暗号化設定ファイルのみを復号する
+
+`BaseConfig.load_config` は、`APP_ENV` が設定されているときに `.enc` ファイルを環境別に選別します。
+たとえば `APP_ENV=prod` の場合、`app_config.prod.json.enc` のような本番用の暗号化設定ファイルを優先して復号します。
+同じ環境向けの専用ファイルが存在する場合、汎用の `app_config.json.enc` は読み込まれません。
+
+環境別ファイルが存在しない場合のみ、汎用の暗号化設定ファイルをフォールバックとして利用します。
+これにより、開発・ステージング・本番で異なる Secret を安全に分離できます。
+
 ### GCP Workload Identity Federation (WIF) を利用した鍵の取得
 
 `libcore-hng` は、GCP Workload Identity Federation (WIF) を利用して Google Secret Manager から復号鍵を安全に取得する機能をサポートしています。これにより、CI/CD環境や異なるクラウドプロバイダーなど、GCP外の環境から直接サービスアカウントキーを配布することなく、GCPリソースにセキュアにアクセスできます。
