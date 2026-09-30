@@ -17,6 +17,10 @@ class FileRenamer:
     """
 
     def __init__(self, directory: str):
+        """
+        コンストラクタ
+        """
+        
         if not os.path.isdir(directory):
             raise ValueError(f"Specified directory not found: {directory}")
         self.directory = directory

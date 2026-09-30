@@ -1,0 +1,18 @@
+{
+  "NumPy style docstring": {
+    "scope": "python",
+    "prefix": ["npdoc", "numpy-docstring"],
+    "body": [
+      "\"\"\"",
+      "${1:概要}",
+      "",
+      "Parameters",
+      "----------",
+      "${2:parameter_name} : ${3:type}",
+      "    ${4:説明}",
+      "\"\"\"",
+      "$0"
+    ],
+    "description": "NumPy style docstring scaffold"
+  }
+}
