@@ -64,6 +64,14 @@ python -m libcore_hng.cli.docs_prompt \
 
 生成されたプロンプトは `docs/prompts/docs_update_prompt.md` に保存されます。
 
+### README更新用プロンプトの作成
+
+README.md、設計用ドキュメント、ソースコードを分析し、READMEの新規作成または差分更新用プロンプトを作成します。
+
+`readme-prompt --mode update` で既存READMEの更新用、`readme-prompt --mode generate` で新規作成用のプロンプトを生成できます。`--project-root` と `--prompt-output-dir` も指定できます。
+
+生成されたプロンプトは `docs/prompt/docs_readme_prompt.md` に保存されます。
+
 `docs-prompt` コマンドをインストール済みの場合は、次の形式でも実行できます。
 
 ```bash

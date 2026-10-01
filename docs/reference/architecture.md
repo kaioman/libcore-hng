@@ -129,9 +129,18 @@ flowchart TD
 
 ### 5.2 CLI 入口
 
+- docs-prompt
+  - 実装: [src/libcore_hng/cli/docs_prompt.py](../../src/libcore_hng/cli/docs_prompt.py)
+  - 役割: 設計ドキュメントの新規作成・更新用プロンプトを作成する
+- readme-prompt
+  - 実装: [src/libcore_hng/cli/readme_prompt.py](../../src/libcore_hng/cli/readme_prompt.py)
+  - 役割: README.md の新規作成・更新用プロンプトを作成する
 - decrypt-to-encrypt
   - 実装: [src/libcore_hng/cli/decrypt_to_encrypt.py](../../src/libcore_hng/cli/decrypt_to_encrypt.py)
   - 役割: 暗号化済み設定ファイルを復号し、編集後に再暗号化する
+- encrypt-file
+  - 実装: [src/libcore_hng/cli/encrypt_file.py](../../src/libcore_hng/cli/encrypt_file.py)
+  - 役割: 指定したファイルを暗号化する
 
 AI Agent が新しい入口を追加する場合は、CLI 追加かライブラリ API 追加かを最初に判断するべきです。
 
