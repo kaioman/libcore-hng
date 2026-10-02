@@ -109,10 +109,10 @@ updateモードでは、既存ドキュメントと収集したソースコー�
 暗号化された `.enc` ファイルを復号し、メモ帳で編集した後に再暗号化します。
 
 ```bash
-decrypt-to-encrypt configs/test-config.json.enc --secret-key <Fernetの秘密鍵>
+decrypt-to-encrypt configs/test-config.json.enc
 ```
 
-秘密鍵はコマンド履歴やプロセス情報に残る可能性があるので取り扱いには注意してください
+実行後、秘密鍵の入力を求められます。入力内容は画面に表示されません。
 
 ## アプリ初期処理サンプル
 
