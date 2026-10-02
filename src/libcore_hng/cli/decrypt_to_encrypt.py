@@ -1,23 +1,21 @@
 import argparse
+import getpass
 import subprocess
 import tempfile
 from pathlib import Path
 from libcore_hng.utils.crypto import create_decryption_file, create_encryption_file
 
 def parse_args(argv=None):
+    """
+    コマンドライン引数を解析する
+    """
     parser = argparse.ArgumentParser(
         description="Decrypt .enc, edit in Notepad, then re-encrypt."
     )
-    parser.add_argument("encrypt_file", help="Encrypted input file (.enc)")
-    parser.add_argument(
-        "-k",
-        "--secret-key",
-        required=True,
-        help="Fernet secret key"
-    )
+    parser.add_argument("encrypt_file", help="Encrypted input file (.enc)")    
     return parser.parse_args(argv)
 
-def run(secret_key: str, encrypt_file_str: str) -> None:
+def run(secret_key: str | None, encrypt_file_str: str) -> int:
     """
     暗号化ファイルをメモ帳で開き編集可能にして保存後に再度暗号化する
 
@@ -34,7 +32,11 @@ def run(secret_key: str, encrypt_file_str: str) -> None:
     encrypt_file_path = Path(encrypt_file_str)
     if not encrypt_file_path.exists():
         print(f"[ERROR] 指定された暗号化ファイルが見つかりません: {encrypt_file_str}")
-        return
+        return 1
+
+    # 秘密鍵の入力を促す
+    if secret_key is None:
+        secret_key = getpass.getpass("秘密鍵を入力してください:")
 
     # 処理開始
     print(f"[INFO] 処理を開始します。対象ファイル: {encrypt_file_path.name}")
@@ -87,11 +89,15 @@ def run(secret_key: str, encrypt_file_str: str) -> None:
         print(f"[INFO] 一時ファイルを削除しました。暗号化ファイルの編集が完了しました。")
     else:
         print(f"[WARNING] 処理中にエラーが発生したため、暗号化ファイルの編集は未完了のまま一時ファイルを強制削除しました。")
-        
+
+    return 0 if is_success else 1
+
 def main(argv=None) -> int:
+    """
+    メイン関数
+    """
     args = parse_args(argv)
-    run(args.secret_key, args.encrypt_file)
-    return 0
+    return run(None, args.encrypt_file)
 
 if __name__ == "__main__":
     raise SystemExit(main())
