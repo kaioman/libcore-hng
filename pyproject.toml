@@ -22,6 +22,12 @@ dependencies = [
     "PyJWT"
 ]
 
+[project.optional-dependencies]
+face = [
+    "mediapipe>=0.10.14, <0.11",
+    "numpy"
+]
+
 [dependency-groups]
 dev = [
     "pytest",
