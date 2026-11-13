@@ -22,6 +22,9 @@
 ### utils 配下の責務を確認したい場合
 - [reference/utils_overview.md](reference/utils_overview.md)
 
+### 追加機能の設計案を確認したい場合
+- [design_proposals/face_similarity.md](design_proposals/face_similarity.md)
+
 ## 3. 保守方針
 
 - 新しいドキュメントを追加した場合は、この一覧に追記してください
