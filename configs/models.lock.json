@@ -1,0 +1,34 @@
+{
+  "default_model": "auraface_v1",
+  "models": {
+    "auraface_v1": {
+      "recognition": {
+        "filename": "glintr100.onnx",
+        "source": "https://huggingface.co/fal/AuraFace-v1",
+        "revision": "af6d057c9b0ec4071d4c49c80e3539258798b609",
+        "sha256": null,
+        "license": "Apache-2.0（適用範囲を重みファイルについて確認）"
+      },
+      "detector": {
+        "filename": "face_detection_yunet_2023mar.onnx",
+        "source": "https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet",
+        "revision": null,
+        "sha256": null,
+        "license": null,
+        "options": {
+          "score_threshold": 0.9,
+          "nms_threshold": 0.3
+        }
+      },
+      "thresholds": {
+        "match": null,
+        "no_match": null
+      },
+      "quality": {
+        "min_face_size": null,
+        "min_blur_variance": null,
+        "max_landmark_asymmetry": null
+      }
+    }
+  }
+}

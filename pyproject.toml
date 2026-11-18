@@ -27,6 +27,12 @@ face = [
     "mediapipe>=0.10.14, <0.11",
     "numpy"
 ]
+face-similarity = [
+    "numpy",
+    "opencv-python-headless",
+    "onnxruntime",
+    "platformdirs"
+]
 
 [dependency-groups]
 dev = [
