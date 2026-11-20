@@ -24,6 +24,7 @@
 
 ### 追加機能の設計案を確認したい場合
 - [design_proposals/face_similarity.md](design_proposals/face_similarity.md)
+- [design_proposals/face_similarity_follow_up.md](design_proposals/face_similarity_follow_up.md)
 
 ## 3. 保守方針
 
