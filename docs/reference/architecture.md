@@ -129,9 +129,14 @@ flowchart TD
 
 ### 5.2 CLI 入口
 
-- decrypt-to-encrypt
-  - 実装: [src/libcore_hng/cli/decrypt_to_encrypt.py](../../src/libcore_hng/cli/decrypt_to_encrypt.py)
-  - 役割: 暗号化済み設定ファイルを復号し、編集後に再暗号化する
+| コマンド | 実装 | 役割 |
+| --- | --- | --- |
+| `decrypt-to-encrypt` | [src/libcore_hng/cli/decrypt_to_encrypt.py](../../src/libcore_hng/cli/decrypt_to_encrypt.py) | 暗号化済み設定ファイルを復号し、編集後に再暗号化する |
+| `docs-prompt` | [src/libcore_hng/cli/docs_prompt.py](../../src/libcore_hng/cli/docs_prompt.py) | プロジェクトのドキュメント生成・更新用プロンプトを作成する |
+| `encrypt-file` | [src/libcore_hng/cli/encrypt_file.py](../../src/libcore_hng/cli/encrypt_file.py) | 指定ファイルを暗号化する |
+| `directory-tree` | [src/libcore_hng/cli/directory_tree.py](../../src/libcore_hng/cli/directory_tree.py) | ディレクトリ構成をツリーまたはExcel向けTSVで出力する |
+
+`directory-tree` は対象ディレクトリを引数に取り、`--style`、`--format`、`--exclude-dir` を指定できます。専用JSON設定は `--config` で明示した場合のみ読み込みます。設定モデルは [src/libcore_hng/configs/directory_tree.py](../../src/libcore_hng/configs/directory_tree.py)、処理本体は [src/libcore_hng/utils/directory_tree.py](../../src/libcore_hng/utils/directory_tree.py) にあります。
 
 AI Agent が新しい入口を追加する場合は、CLI 追加かライブラリ API 追加かを最初に判断するべきです。
 
