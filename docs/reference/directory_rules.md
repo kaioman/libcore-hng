@@ -24,4 +24,5 @@
 - 新しい機能は責務に応じて `core/`、`utils/`、`exceptions/`、`configs/` に切り分ける。
 - テスト用データは [tests/data](../../tests/data) のように専用ディレクトリにまとめる。
 - 設定ファイルは [configs](../../configs) 配下に置き、環境依存値は外部から注入する。
+- `directory-tree` の任意設定ファイルは [configs/directory-tree.json](../../configs/directory-tree.json)、対応する設定モデルは [src/libcore_hng/configs/directory_tree.py](../../src/libcore_hng/configs/directory_tree.py) に配置する。
 - ドキュメントやルールは [docs](../../docs) 配下に集約する。

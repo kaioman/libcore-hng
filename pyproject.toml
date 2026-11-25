@@ -33,6 +33,7 @@ dev = [
 decrypt-to-encrypt = "libcore_hng.cli.decrypt_to_encrypt:main"
 docs-prompt = "libcore_hng.cli.docs_prompt:main"
 encrypt-file = "libcore_hng.cli.encrypt_file:main"
+directory-tree = "libcore_hng.cli.directory_tree:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

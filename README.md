@@ -114,6 +114,28 @@ decrypt-to-encrypt configs/test-config.json.enc --secret-key <Fernetの秘密鍵
 
 秘密鍵はコマンド履歴やプロセス情報に残る可能性があるので取り扱いには注意してください
 
+### ディレクトリ構成の出力
+
+指定したディレクトリ配下の構成を、ツリー表示またはExcelに貼り付けられるTSV形式で出力します。
+
+```bash
+directory-tree .
+directory-tree . --style stylish --exclude-dir .git --exclude-dir node_modules
+directory-tree . --format excel
+directory-tree D:/data --config D:/settings/directory-tree.json
+```
+
+| オプション | 説明 | デフォルト |
+| --- | --- | --- |
+| `--style normal\|stylish` | ツリーの罫線スタイル | `normal` |
+| `--format tree\|excel` | `tree` は罫線付き表示、`excel` は `depth`、`type`、`name`、`relative_path` 列のTSV形式 | `tree` |
+| `--exclude-dir NAME` | 指定名のディレクトリを除外します。複数回指定でき、階層内の同名ディレクトリすべてに適用されます（大文字・小文字を区別しません） | なし |
+| `--config FILE` | directory-tree専用のJSON設定ファイルを明示して読み込みます | なし |
+
+並び順はディレクトリを先にし、名前順にします。`--config` を省略した場合は設定ファイルを自動探索せず、モデルに定義された既定値を使用します。サンプルは [configs/directory-tree.json](configs/directory-tree.json) です。JSONにモデル未定義のキーがある場合は警告を表示してそのキーを無視し、設定項目の既定値を使用します。
+
+ルートにディレクトリへのシンボリックリンクを指定した場合はリンク先を走査します。走査中に見つかったシンボリックリンクは表示しますが、そのリンク先はたどりません。入力パスが存在しない場合やディレクトリでない場合は、エラーを標準エラー出力に表示して失敗コードを返します。
+
 ## アプリ初期処理サンプル
 
 このプロジェクトでは、`AppInitializer` を用いてアプリケーションの初期化処理を行います。

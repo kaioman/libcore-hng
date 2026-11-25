@@ -1,0 +1,16 @@
+{
+    "borders": {
+        "normal": {
+            "branch": "├── ",
+            "last": "└── ",
+            "vertical": "│   ",
+            "blank": "    "
+        },
+        "stylish": {
+            "branch": "┣━━ ",
+            "last": "┗━━ ",
+            "vertical": "┃   ",
+            "blank": "    "
+        }
+    }
+}
